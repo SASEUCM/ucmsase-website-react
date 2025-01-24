@@ -28,17 +28,19 @@ export default function App() {
 
   useEffect(() => {
     let subscription: Subscription | undefined;
+    
     async function setupSubscription() {
       try {
         const { data: initialData } = await client.models.Todo.list();
         setTodos(initialData);
 
-        subscription = client.models.Todo.observeQuery().subscribe({
-          next: ({ items }) => {
-            setTodos(items);
-          },
-          error: (error) => console.error('Subscription error:', error)
-        });
+        subscription = client.models.Todo.observeQuery()
+          .subscribe({
+            next: ({ items }) => {
+              setTodos([...items]); // Create a new array to trigger re-render
+            },
+            error: (error) => console.error('Subscription error:', error)
+          });
       } catch (error) {
         console.error('Error setting up subscription:', error);
       }
