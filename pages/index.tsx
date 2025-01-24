@@ -1,35 +1,22 @@
+// index.tsx
 import { useState, useEffect } from "react";
 import { generateClient } from "aws-amplify/data";
 import type { Schema } from "@/amplify/data/resource";
-import { useAuthenticator } from "@aws-amplify/ui-react";
-import { fetchAuthSession } from 'aws-amplify/auth';
+import { useAuth } from "./context/AuthContext";
 import { type Subscription } from 'rxjs';
 
 const client = generateClient<Schema>();
 
 export default function App() {
-  const { user, signOut } = useAuthenticator();
+  const { isAuthenticated, isAdmin, userEmail } = useAuth();
   const [todos, setTodos] = useState<Array<Schema["Todo"]["type"]>>([]);
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    async function checkUserGroups() {
-      try {
-        const session = await fetchAuthSession();
-        const groups = (session.tokens?.accessToken.payload['cognito:groups'] as string[]) || [];
-        setIsAdmin(groups.includes('admin'));
-      } catch (error) {
-        console.error('Error checking user groups:', error);
-        setIsAdmin(false);
-      }
-    }
-    checkUserGroups();
-  }, []);
 
   useEffect(() => {
     let subscription: Subscription | undefined;
     
     async function setupSubscription() {
+      if (!isAuthenticated) return;
+      
       try {
         const { data: initialData } = await client.models.Todo.list();
         setTodos(initialData);
@@ -37,7 +24,7 @@ export default function App() {
         subscription = client.models.Todo.observeQuery()
           .subscribe({
             next: ({ items }) => {
-              setTodos([...items]); // Create a new array to trigger re-render
+              setTodos([...items]);
             },
             error: (error) => console.error('Subscription error:', error)
           });
@@ -53,7 +40,7 @@ export default function App() {
         subscription.unsubscribe();
       }
     };
-  }, []);
+  }, [isAuthenticated]);
 
   async function createTodo() {
     const content = window.prompt("Todo content");
@@ -68,24 +55,54 @@ export default function App() {
     }
   }
 
+  // If not authenticated, show a welcome message
+  if (!isAuthenticated) {
+    return (
+      <main className="p-8">
+        <h1 className="text-3xl font-bold mb-4">Welcome to Our Todo App</h1>
+        <p className="mb-4">Please sign in to manage your todos.</p>
+        <p>You can still browse our public pages using the navigation above.</p>
+      </main>
+    );
+  }
+
   return (
-    <main>
-      <h1>{isAdmin ? "Admin Dashboard" : "My todos"}</h1>
-      <p>Welcome, {user?.signInDetails?.loginId || "user"}</p>
-      <button onClick={createTodo}>+ new</button>
-      <ul style={{ listStyle: 'none', padding: 0 }}>
+    <main className="p-8">
+      <h1 className="text-2xl font-bold mb-4">
+        {isAdmin ? "Admin Dashboard" : "My Todos"}
+      </h1>
+      <p className="mb-4">Welcome, {userEmail}</p>
+      
+      <button 
+        onClick={createTodo}
+        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mb-4"
+      >
+        + New Todo
+      </button>
+      
+      <ul className="space-y-2">
         {todos.map((todo) => (
-          <li key={todo.id}>{todo.content}</li>
+          <li 
+            key={todo.id}
+            className="p-3 bg-gray-50 rounded shadow"
+          >
+            {todo.content}
+          </li>
         ))}
       </ul>
-      <button onClick={signOut}>Sign out</button>
-      <div>
-        🥳 App successfully hosted. Try creating a new todo.
-        <br />
-        <a href="https://docs.amplify.aws/gen2/start/quickstart/nextjs-pages-router/">
-          Review next steps of this tutorial.
-        </a>
-      </div>
+      
+      {isAuthenticated && (
+        <div className="mt-8 p-4 bg-green-50 rounded">
+          🥳 App successfully connected. Try creating a new todo.
+          <br />
+          <a 
+            href="https://docs.amplify.aws/gen2/start/quickstart/nextjs-pages-router/"
+            className="text-blue-500 hover:underline"
+          >
+            Review next steps of this tutorial.
+          </a>
+        </div>
+      )}
     </main>
   );
 }
