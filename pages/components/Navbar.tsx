@@ -1,107 +1,123 @@
 // components/Navbar.tsx
-import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '../context/AuthContext';
 import { signOut } from 'aws-amplify/auth';
+import {
+  Flex,
+  Button,
+  View,
+  Link as AmplifyLink,
+} from '@aws-amplify/ui-react';
+import '@aws-amplify/ui-react/styles.css';
 
-const Navbar = () => {
+export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
   const { isAuthenticated, isAdmin, checkAuth } = useAuth();
 
   const handleSignOut = async () => {
     try {
-      await signOut();
+      await signOut({ global: true });
       await checkAuth();
-      router.push('/');
+      router.push('/about');
     } catch (error) {
       console.error('Error signing out:', error);
     }
   };
 
   return (
-    <header className="bg-white border-b w-full">
-      <div style={{ margin: '0 auto', width: '90%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 0' }}>
+    <View
+      as="header"
+      backgroundColor="white"
+      borderStyle="solid"
+      borderWidth="0 0 1px 0"
+      borderColor="#ddd"
+      width="100%"
+    >
+      <Flex
+        margin="0 auto"
+        width="90%"
+        justifyContent="space-between"
+        alignItems="center"
+        padding="1rem 0"
+      >
         {/* Logo */}
-        <Link href="/">
-          <img
-            src="/api/placeholder/40/40"
-            alt="SASE UC Merced Logo"
-            className="h-10 w-auto"
-          />
+        <Link href="/about" passHref legacyBehavior>
+          <AmplifyLink>
+            <div style={{ position: 'relative', height: '40px', width: 'auto' }}>
+              <Image
+                src="/logo.png"
+                alt="SASE UC Merced Logo"
+                height={40}
+                width={40}
+                style={{ 
+                  objectFit: 'contain',
+                  width: 'auto',
+                  height: '100%'
+                }}
+              />
+            </div>
+          </AmplifyLink>
         </Link>
 
         {/* Nav Links */}
-        <nav style={{ display: 'flex', gap: '3rem' }}>
-          <Link href="/about" className="text-gray-700">About Us</Link>
-          <Link href="/events" className="text-gray-700">Events</Link>
-          <Link href="/gallery" className="text-gray-700">Gallery</Link>
-          <Link href="/contact" className="text-gray-700">Contact</Link>
-          <Link href="/sponsors" className="text-gray-700">Sponsors</Link>
-          <Link href="/eboard" className="text-gray-700">E-Board</Link>
-        </nav>
+        <Flex as="nav" direction="row" gap="3rem">
+          <Link href="/about" passHref legacyBehavior>
+            <AmplifyLink className="navbar-link">About Us</AmplifyLink>
+          </Link>
+          <Link href="/events" passHref legacyBehavior>
+            <AmplifyLink className="navbar-link">Events</AmplifyLink>
+          </Link>
+          <Link href="/gallery" passHref legacyBehavior>
+            <AmplifyLink className="navbar-link">Gallery</AmplifyLink>
+          </Link>
+          <Link href="/contact" passHref legacyBehavior>
+            <AmplifyLink className="navbar-link">Contact</AmplifyLink>
+          </Link>
+          <Link href="/sponsors" passHref legacyBehavior>
+            <AmplifyLink className="navbar-link">Sponsors</AmplifyLink>
+          </Link>
+          <Link href="/eboard" passHref legacyBehavior>
+            <AmplifyLink className="navbar-link">E-Board</AmplifyLink>
+          </Link>
+        </Flex>
 
-        {/* Search and Login */}
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <input
-            type="text"
-            placeholder="Search"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            style={{ 
-              padding: '0.5rem 1rem',
-              border: '1px solid #e2e2e2',
-              borderRadius: '0.5rem',
-              width: '200px'
-            }}
-          />
+        {/* Auth Area */}
+        <Flex alignItems="center" gap="1rem">
           {isAuthenticated ? (
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <>
               {isAdmin && (
-                <Link 
-                  href="/admin"
-                  style={{
-                    color: '#dc2626',
-                    textDecoration: 'none'
-                  }}
-                >
-                  Admin Panel
+                <Link href="/admin" passHref legacyBehavior>
+                  <AmplifyLink
+                    className="navbar-link"
+                    style={{ fontWeight: 'bold' }}
+                  >
+                    Admin Panel
+                  </AmplifyLink>
                 </Link>
               )}
-              <button
+              <Button
                 onClick={handleSignOut}
-                style={{
-                  backgroundColor: '#1a56db',
-                  color: 'white',
-                  padding: '0.5rem 1.5rem',
-                  borderRadius: '0.5rem',
-                  border: 'none',
-                  cursor: 'pointer'
-                }}
+                variation="primary"
+                className="blue-button"
               >
                 Sign Out
-              </button>
-            </div>
+              </Button>
+            </>
           ) : (
-            <button
+            <Button
               onClick={() => router.push('/login')}
-              style={{
-                backgroundColor: '#1a56db',
-                color: 'white',
-                padding: '0.5rem 1.5rem',
-                borderRadius: '0.5rem',
-                border: 'none',
-                cursor: 'pointer'
-              }}
+              variation="primary"
+              className='blue-button'
             >
               Log In
-            </button>
+            </Button>
           )}
-        </div>
-      </div>
-    </header>
+        </Flex>
+      </Flex>
+    </View>
   );
-};
-
-export default Navbar;
+}
