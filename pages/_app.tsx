@@ -8,39 +8,34 @@ import outputs from "@/amplify_outputs.json";
 import "@aws-amplify/ui-react/styles.css";
 import { Authenticator } from '@aws-amplify/ui-react';
 import Navbar from "./components/Navbar";
-import AdminNavbar from "./components/AdminNavbar";
 import { useRouter } from 'next/router';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { useEffect } from 'react';
+import { formFields, components } from './config/auth-config';
 
-// 1. Extend the NextPage type to allow an optional getLayout function
 export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
   getLayout?: (page: ReactElement) => ReactNode
 }
 
-// 2. Extend AppProps so that `Component` is our NextPageWithLayout
 interface AppPropsWithLayout extends AppProps {
   Component: NextPageWithLayout
 }
 
 Amplify.configure(outputs);
 
-// A wrapper to decide which navbar to show
 function NavigationWrapper({ children }: { children: React.ReactNode }) {
   const { isAdmin } = useAuth();
   const router = useRouter();
   
-  const isAdminRoute = router.pathname.startsWith('/admin');
-
   useEffect(() => {
-    if (isAdminRoute && !isAdmin) {
+    if (router.pathname.startsWith('/admin') && !isAdmin) {
       router.push('/');
     }
-  }, [isAdminRoute, isAdmin, router]);
+  }, [router.pathname, isAdmin, router]);
 
   return (
     <>
-      {isAdminRoute ? <AdminNavbar /> : <Navbar />}
+      <Navbar />
       <div className="content-container">
         {children}
       </div>
@@ -48,10 +43,9 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
   );
 }
 
-// The core logic that decides how to render based on auth
 function AppContent({ Component, pageProps }: AppPropsWithLayout) {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, checkAuth } = useAuth();
   
   const publicRoutes = ['/', '/about', '/events', '/gallery', '/contact', '/sponsors'];
   const isPublicRoute = publicRoutes.includes(router.pathname);
@@ -67,19 +61,26 @@ function AppContent({ Component, pageProps }: AppPropsWithLayout) {
 
   // Otherwise, force Authenticator UI
   return (
-    <Authenticator>
-      {() => (
-        <NavigationWrapper>
-          <Component {...pageProps} />
-        </NavigationWrapper>
-      )}
+    <Authenticator formFields={formFields} components={components}>
+      {({ signOut, user }) => {
+        // When we get here, we know the user is authenticated
+        // Trigger a check of the auth state
+        checkAuth().then(() => {
+          // After checking auth, redirect to about page
+          router.push('/about');
+        });
+
+        return (
+          <NavigationWrapper>
+            <Component {...pageProps} />
+          </NavigationWrapper>
+        );
+      }}
     </Authenticator>
   );
 }
 
-// The main App component
 export default function App(props: AppPropsWithLayout) {
-  // Use `getLayout` if it exists; otherwise just render the page as-is
   const getLayout = props.Component.getLayout 
     || ((page: React.ReactNode) => page);
 

@@ -63,3 +63,135 @@ a {
   font-weight: 800;
   text-decoration: none;
 }
+
+/* Default black text for navbar links */
+.navbar-link {
+  color: gray !important;
+  text-decoration: none;
+  transition: color 0.3s ease, transform 0.3s ease;
+}
+
+/* Hover changes link color to #646cff and applies a slight scale */
+.navbar-link:hover {
+  color: #1A54C4  !important;
+}
+
+.blue-button {
+  background-color: #1A54C4 !important;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  transition: background-color 0.25s ease;
+  cursor: pointer;
+}
+
+.blue-button:hover {
+  background-color: #153F94 !important;
+}
+
+/* Gallery specific styles */
+.gallery-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.gallery-item {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  background: white;
+}
+
+.gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.gallery-item:hover img {
+  transform: scale(1.05);
+}
+
+/* Contact form specific styles */
+.amplify-textfield, .amplify-textareafield {
+  --amplify-components-field-label-color: #333;
+  --amplify-components-field-label-font-size: 1rem;
+  --amplify-components-field-label-font-weight: 500;
+}
+
+.amplify-input, .amplify-textarea {
+  border-radius: 8px !important;
+  border: 1px solid #ddd !important;
+  padding: 12px !important;
+  font-size: 1rem !important;
+}
+
+.amplify-input:focus, .amplify-textarea:focus {
+  border-color: #1A54C4 !important;
+  box-shadow: 0 0 0 2px rgba(26, 84, 196, 0.1) !important;
+}
+
+.amplify-button {
+  min-width: 120px;
+}
+
+/* Sponsors specific styles */
+.sponsor-item {
+  padding: 2rem;
+  border-radius: 12px;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.sponsor-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+.sponsor-item img {
+  transition: transform 0.2s ease-in-out;
+}
+
+.sponsor-item:hover img {
+  transform: scale(1.05);
+}
+
+/* E-board specific styles */
+.board-member-card {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  cursor: pointer;
+  background: white;
+}
+
+.board-member-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.board-member-card img {
+  transition: transform 0.2s ease-in-out;
+}
+
+.board-member-card:hover img {
+  transform: scale(1.05);
+}
+
+/* Add these styles to your app.css */
+
+.quick-action-card {
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.quick-action-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.quick-action-card:hover svg {
+  color: #1A54C4;
+}
