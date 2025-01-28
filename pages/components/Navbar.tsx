@@ -90,6 +90,7 @@ export default function Navbar() {
           {isAuthenticated ? (
             <>
               {isAdmin && (
+                <div style={{ display: 'flex', gap: '1rem' }}>
                 <Link href="/admin" passHref legacyBehavior>
                   <AmplifyLink
                     className="navbar-link"
@@ -98,6 +99,10 @@ export default function Navbar() {
                     Admin Panel
                   </AmplifyLink>
                 </Link>
+                <Link href="/admin/subscribers" passHref legacyBehavior>
+                    <AmplifyLink className="navbar-link">Subscribers</AmplifyLink>
+                  </Link>
+                </div>
               )}
               <Button
                 onClick={handleSignOut}

@@ -40,6 +40,7 @@ const AdminNavbar = () => {
           <Link href="/admin/events" className="text-gray-700">Manage Events</Link>
           <Link href="/admin/content" className="text-gray-700">Content</Link>
           <Link href="/admin/settings" className="text-gray-700">Settings</Link>
+          <Link href="/admin/subscribers" className="text-gray-700">Subscribers</Link>
         </nav>
 
         {/* Admin Actions */}
