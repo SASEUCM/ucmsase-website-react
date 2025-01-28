@@ -47,7 +47,7 @@ function AppContent({ Component, pageProps }: AppPropsWithLayout) {
   const router = useRouter();
   const { isAuthenticated, checkAuth } = useAuth();
   
-  const publicRoutes = ['/', '/about', '/events', '/gallery', '/contact', '/sponsors'];
+  const publicRoutes = ['/', '/about', '/events', '/gallery', '/contact', '/sponsors', '/eboard'];
   const isPublicRoute = publicRoutes.includes(router.pathname);
 
   // If route is public or user is authenticated, load the page

@@ -1,6 +1,6 @@
 // pages/contact.tsx
 import { View } from '@aws-amplify/ui-react';
-import Contact from './components/Contact';
+import SubscriberForm from './components/SubscriberForm';
 
 export default function ContactPage() {
   return (
@@ -10,7 +10,7 @@ export default function ContactPage() {
       minHeight="100vh"
       padding="2rem"
     >
-      <Contact />
+      <SubscriberForm />
     </View>
   );
 }
