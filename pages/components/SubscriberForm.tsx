@@ -1,3 +1,4 @@
+// components/SubscriberForm.tsx
 import { useState } from 'react';
 import {
   View,
@@ -10,13 +11,6 @@ import {
   Flex,
   CheckboxField,
 } from '@aws-amplify/ui-react';
-import { generateClient } from 'aws-amplify/api';
-import type { Schema } from '@/amplify/data/resource';
-
-// Initialize the API client with apiKey auth mode
-const client = generateClient<Schema>({
-  authMode: 'apiKey'
-});
 
 export default function SubscriberForm() {
   const [formState, setFormState] = useState({
@@ -35,34 +29,44 @@ export default function SubscriberForm() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-    console.log('Submitting subscription:', formState);
+    setSubmitStatus({ success: false, error: false, message: '' });
+    
+    console.log('Submitting form data:', formState);
 
     try {
-      // Create the subscriber directly using the Amplify client
-      const subscriberData = {
-        email: formState.email,
-        name: formState.name,
-        subscribeDate: new Date().toISOString(),
-        isActive: true
-      };
+      const response = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formState.name,
+          email: formState.email
+        })
+      });
 
-      console.log('Creating subscriber with data:', subscriberData);
-      const result = await client.models.Subscriber.create(subscriberData);
-      console.log('Subscriber created:', result);
+      console.log('API Response status:', response.status);
+      const data = await response.json();
+      console.log('API Response data:', data);
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Subscription failed');
+      }
 
       setSubmitStatus({ 
         success: true, 
         error: false, 
-        message: 'Thank you for subscribing! You\'ll receive our updates soon.'
+        message: data.message || 'Successfully subscribed!'
       });
       
+      // Clear form on success
       setFormState({
         name: '',
         email: '',
         subscribeToNewsletter: true
       });
     } catch (error) {
-      console.error('Error creating subscriber:', error);
+      console.error('Subscription error:', error);
       setSubmitStatus({ 
         success: false, 
         error: true,

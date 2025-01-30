@@ -1,18 +1,72 @@
 // pages/api/subscribe.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
 import { generateClient } from 'aws-amplify/api';
 import type { Schema } from '@/amplify/data/resource';
 
-const ses = new SESClient({ 
-  region: process.env.AWS_REGION || 'us-west-1',
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || ''
-  }
+// Initialize the client with apiKey auth mode
+const client = generateClient<Schema>({
+  authMode: 'apiKey'
 });
 
-const client = generateClient<Schema>();
+const MAILCHIMP_API_KEY = process.env.MAILCHIMP_API_KEY;
+const MAILCHIMP_SERVER_PREFIX = process.env.MAILCHIMP_SERVER_PREFIX;
+const MAILCHIMP_LIST_ID = process.env.MAILCHIMP_LIST_ID;
+
+async function addSubscriberToMailchimp(email: string, name: string) {
+  console.log('Starting Mailchimp API call with:', {
+    serverPrefix: MAILCHIMP_SERVER_PREFIX,
+    listId: MAILCHIMP_LIST_ID,
+    email,
+    name
+  });
+
+  if (!MAILCHIMP_API_KEY || !MAILCHIMP_SERVER_PREFIX || !MAILCHIMP_LIST_ID) {
+    throw new Error('Missing required Mailchimp configuration');
+  }
+
+  const url = `https://${MAILCHIMP_SERVER_PREFIX}.api.mailchimp.com/3.0/lists/${MAILCHIMP_LIST_ID}/members`;
+  console.log('Mailchimp API URL:', url);
+
+  const data = {
+    email_address: email,
+    status: 'subscribed',
+    merge_fields: {
+      FNAME: name.split(' ')[0] || '',
+      LNAME: name.split(' ').slice(1).join(' ') || ''
+    }
+  };
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `apikey ${MAILCHIMP_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data)
+    });
+
+    console.log('Mailchimp API response status:', response.status);
+    
+    const responseData = await response.json();
+    console.log('Mailchimp API response:', responseData);
+
+    if (!response.ok) {
+      // Handle "Member Exists" case
+      if (response.status === 400 && responseData.title === 'Member Exists') {
+        console.log('Subscriber already exists in Mailchimp');
+        return { status: 'already_subscribed' };
+      }
+      
+      throw new Error(`Mailchimp API error: ${responseData.title} - ${responseData.detail}`);
+    }
+
+    return responseData;
+  } catch (error) {
+    console.error('Error in Mailchimp API call:', error);
+    throw error;
+  }
+}
 
 export default async function handler(
   req: NextApiRequest,
@@ -24,50 +78,51 @@ export default async function handler(
 
   try {
     const { name, email } = req.body;
-    console.log('Attempting to create subscriber:', { name, email });
+    console.log('Processing subscription for:', { name, email });
 
-    // Create new subscriber
-    const newSubscriber = {
-      email,
-      name,
-      subscribeDate: new Date().toISOString(),
-      isActive: true
-    };
+    // Validate inputs
+    if (!email || !name) {
+      return res.status(400).json({
+        message: 'Email and name are required'
+      });
+    }
 
-    const result = await client.models.Subscriber.create(newSubscriber);
-    console.log('Subscriber created successfully:', result);
+    // First try to add to Mailchimp
+    const mailchimpResult = await addSubscriberToMailchimp(email, name);
+    console.log('Mailchimp subscription result:', mailchimpResult);
 
-    // Send welcome email
-    const command = new SendEmailCommand({
-      Source: process.env.SES_FROM_EMAIL,
-      Destination: {
-        ToAddresses: [email],
-      },
-      Message: {
-        Subject: {
-          Data: 'Welcome to SASE UC Merced Newsletter!',
-        },
-        Body: {
-          Text: {
-            Data: `Hi ${name},\n\nThank you for subscribing to SASE UC Merced's newsletter! We'll keep you updated with our latest events and announcements.\n\nBest regards,\nSASE UC Merced Team`,
-          },
-        },
-      },
-    });
+    // If successful or already subscribed, add/update in database
+    try {
+      const newSubscriber = {
+        email,
+        name,
+        subscribeDate: new Date().toISOString(),
+        isActive: true
+      };
 
-    await ses.send(command);
-    console.log('Welcome email sent successfully');
-    
+      const dbResult = await client.models.Subscriber.create(newSubscriber);
+      console.log('Database subscription result:', dbResult);
+    } catch (dbError) {
+      console.error('Database error:', dbError);
+      // Even if database fails, we'll still return success if Mailchimp worked
+    }
+
+    // Determine appropriate success message
+    const message = mailchimpResult.status === 'already_subscribed'
+      ? 'You are already subscribed to our newsletter!'
+      : 'Successfully subscribed to our newsletter!';
+
     res.status(200).json({ 
-      message: 'Successfully subscribed! Check your email for confirmation.',
+      message,
       status: 'success'
     });
 
   } catch (error) {
-    console.error('Subscription error:', error);
+    console.error('Full subscription error:', error);
     res.status(500).json({ 
       message: 'Error processing subscription. Please try again.',
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
+      details: process.env.NODE_ENV === 'development' ? error : undefined
     });
   }
 }
