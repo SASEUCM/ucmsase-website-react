@@ -9,6 +9,9 @@ frontend:
   phases:
     build:
       commands:
+        - echo "MAILCHIMP_API_KEY=$MAILCHIMP_API_KEY" >> .env
+        - echo "MAILCHIMP_SERVER_PREFIX=$MAILCHIMP_SERVER_PREFIX" >> .env
+        - echo "MAILCHIMP_LIST_ID=$MAILCHIMP_LIST_ID" >> .env
         - npm run build
   artifacts:
     baseDirectory: .next
