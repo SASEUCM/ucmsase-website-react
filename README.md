@@ -6,7 +6,7 @@
 ```npm install```
 ```npm run dev```
 
-## Production
+## Production development
 
 # in order to test production ability
 ```npm run build```
