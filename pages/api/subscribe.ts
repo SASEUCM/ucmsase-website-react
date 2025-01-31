@@ -17,10 +17,16 @@ async function addSubscriberToMailchimp(email: string, name: string) {
     serverPrefix: MAILCHIMP_SERVER_PREFIX,
     listId: MAILCHIMP_LIST_ID,
     email,
-    name
+    name,
+    hasApiKey: !!MAILCHIMP_API_KEY
   });
 
   if (!MAILCHIMP_API_KEY || !MAILCHIMP_SERVER_PREFIX || !MAILCHIMP_LIST_ID) {
+    console.error('Environment variables check:', {
+      hasApiKey: !!MAILCHIMP_API_KEY,
+      hasServerPrefix: !!MAILCHIMP_SERVER_PREFIX,
+      hasListId: !!MAILCHIMP_LIST_ID
+    });
     throw new Error('Missing required Mailchimp configuration');
   }
 
@@ -37,6 +43,12 @@ async function addSubscriberToMailchimp(email: string, name: string) {
   };
 
   try {
+    console.log('Making Mailchimp API request with data:', {
+      ...data,
+      url,
+      method: 'POST'
+    });
+
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -72,8 +84,18 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  console.log('API Route started, method:', req.method);
+  console.log('Environment check:', {
+    hasApiKey: !!MAILCHIMP_API_KEY,
+    hasServerPrefix: !!MAILCHIMP_SERVER_PREFIX,
+    hasListId: !!MAILCHIMP_LIST_ID,
+    nodeEnv: process.env.NODE_ENV
+  });
+
   if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' });
+    return res.status(405).json({
+      message: 'Method not allowed'
+    });
   }
 
   try {
@@ -82,17 +104,25 @@ export default async function handler(
 
     // Validate inputs
     if (!email || !name) {
+      console.log('Validation failed:', { hasEmail: !!email, hasName: !!name });
       return res.status(400).json({
         message: 'Email and name are required'
       });
     }
 
     // First try to add to Mailchimp
-    const mailchimpResult = await addSubscriberToMailchimp(email, name);
-    console.log('Mailchimp subscription result:', mailchimpResult);
-
-    // If successful or already subscribed, add/update in database
+    let mailchimpResult;
     try {
+      mailchimpResult = await addSubscriberToMailchimp(email, name);
+      console.log('Mailchimp subscription result:', mailchimpResult);
+    } catch (mailchimpError) {
+      console.error('Mailchimp subscription error:', mailchimpError);
+      // Continue with database operation even if Mailchimp fails
+    }
+
+    // Then try to add to database
+    try {
+      console.log('Attempting database operation');
       const newSubscriber = {
         email,
         name,
@@ -104,11 +134,18 @@ export default async function handler(
       console.log('Database subscription result:', dbResult);
     } catch (dbError) {
       console.error('Database error:', dbError);
-      // Even if database fails, we'll still return success if Mailchimp worked
+      // If Mailchimp worked but database failed, still consider it a partial success
+      if (mailchimpResult) {
+        return res.status(207).json({
+          message: 'Partially subscribed - you will receive email confirmations',
+          warning: 'Database operation failed'
+        });
+      }
+      throw dbError;
     }
 
     // Determine appropriate success message
-    const message = mailchimpResult.status === 'already_subscribed'
+    const message = mailchimpResult?.status === 'already_subscribed'
       ? 'You are already subscribed to our newsletter!'
       : 'Successfully subscribed to our newsletter!';
 
