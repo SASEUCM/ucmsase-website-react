@@ -3,7 +3,6 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { generateClient } from 'aws-amplify/api';
 import type { Schema } from '@/amplify/data/resource';
 
-// Initialize the client with apiKey auth mode
 const client = generateClient<Schema>({
   authMode: 'apiKey'
 });
@@ -13,25 +12,29 @@ const MAILCHIMP_SERVER_PREFIX = process.env.MAILCHIMP_SERVER_PREFIX;
 const MAILCHIMP_LIST_ID = process.env.MAILCHIMP_LIST_ID;
 
 async function addSubscriberToMailchimp(email: string, name: string) {
-  console.log('Starting Mailchimp API call with:', {
+  // Log actual values (except full API key)
+  const debugInfo = {
     serverPrefix: MAILCHIMP_SERVER_PREFIX,
     listId: MAILCHIMP_LIST_ID,
+    apiKeyFirstChars: MAILCHIMP_API_KEY ? `${MAILCHIMP_API_KEY.substring(0, 6)}...` : 'not set',
     email,
-    name,
-    hasApiKey: !!MAILCHIMP_API_KEY
-  });
+    name
+  };
+  console.log('Mailchimp Config:', debugInfo);
 
+  // Detailed environment check
   if (!MAILCHIMP_API_KEY || !MAILCHIMP_SERVER_PREFIX || !MAILCHIMP_LIST_ID) {
-    console.error('Environment variables check:', {
-      hasApiKey: !!MAILCHIMP_API_KEY,
-      hasServerPrefix: !!MAILCHIMP_SERVER_PREFIX,
-      hasListId: !!MAILCHIMP_LIST_ID
-    });
-    throw new Error('Missing required Mailchimp configuration');
+    const missing = {
+      apiKey: !MAILCHIMP_API_KEY ? 'missing' : 'present',
+      serverPrefix: !MAILCHIMP_SERVER_PREFIX ? 'missing' : MAILCHIMP_SERVER_PREFIX,
+      listId: !MAILCHIMP_LIST_ID ? 'missing' : MAILCHIMP_LIST_ID,
+    };
+    console.error('Missing Mailchimp configuration:', missing);
+    throw new Error(`Missing Mailchimp configuration: ${JSON.stringify(missing)}`);
   }
 
   const url = `https://${MAILCHIMP_SERVER_PREFIX}.api.mailchimp.com/3.0/lists/${MAILCHIMP_LIST_ID}/members`;
-  console.log('Mailchimp API URL:', url);
+  console.log('Attempting Mailchimp API call to URL:', url);
 
   const data = {
     email_address: email,
@@ -43,12 +46,6 @@ async function addSubscriberToMailchimp(email: string, name: string) {
   };
 
   try {
-    console.log('Making Mailchimp API request with data:', {
-      ...data,
-      url,
-      method: 'POST'
-    });
-
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -58,24 +55,27 @@ async function addSubscriberToMailchimp(email: string, name: string) {
       body: JSON.stringify(data)
     });
 
-    console.log('Mailchimp API response status:', response.status);
+    console.log('Mailchimp API Response Status:', response.status);
     
     const responseData = await response.json();
-    console.log('Mailchimp API response:', responseData);
+    console.log('Mailchimp API Response:', responseData);
 
     if (!response.ok) {
-      // Handle "Member Exists" case
       if (response.status === 400 && responseData.title === 'Member Exists') {
-        console.log('Subscriber already exists in Mailchimp');
         return { status: 'already_subscribed' };
       }
-      
-      throw new Error(`Mailchimp API error: ${responseData.title} - ${responseData.detail}`);
+      throw new Error(`Mailchimp API error: ${JSON.stringify(responseData)}`);
     }
 
     return responseData;
   } catch (error) {
-    console.error('Error in Mailchimp API call:', error);
+    // Log the full error for debugging
+    console.error('Mailchimp API Error Details:', {
+      error: error instanceof Error ? error.message : error,
+      url,
+      serverPrefix: MAILCHIMP_SERVER_PREFIX,
+      listId: MAILCHIMP_LIST_ID
+    });
     throw error;
   }
 }
@@ -84,45 +84,46 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  console.log('API Route started, method:', req.method);
-  console.log('Environment check:', {
-    hasApiKey: !!MAILCHIMP_API_KEY,
-    hasServerPrefix: !!MAILCHIMP_SERVER_PREFIX,
-    hasListId: !!MAILCHIMP_LIST_ID,
-    nodeEnv: process.env.NODE_ENV
+  // Log all environment variables at start (except full API key)
+  console.log('Environment Variables Check:', {
+    MAILCHIMP_SERVER_PREFIX,
+    MAILCHIMP_LIST_ID,
+    MAILCHIMP_API_KEY_STATUS: MAILCHIMP_API_KEY ? 'Present' : 'Missing',
+    NODE_ENV: process.env.NODE_ENV
   });
 
   if (req.method !== 'POST') {
-    return res.status(405).json({
-      message: 'Method not allowed'
-    });
+    return res.status(405).json({ message: 'Method not allowed' });
   }
 
   try {
     const { name, email } = req.body;
     console.log('Processing subscription for:', { name, email });
 
-    // Validate inputs
     if (!email || !name) {
-      console.log('Validation failed:', { hasEmail: !!email, hasName: !!name });
       return res.status(400).json({
         message: 'Email and name are required'
       });
     }
 
-    // First try to add to Mailchimp
-    let mailchimpResult;
+    // Try Mailchimp first
     try {
-      mailchimpResult = await addSubscriberToMailchimp(email, name);
-      console.log('Mailchimp subscription result:', mailchimpResult);
-    } catch (mailchimpError) {
-      console.error('Mailchimp subscription error:', mailchimpError);
-      // Continue with database operation even if Mailchimp fails
+      const mailchimpResult = await addSubscriberToMailchimp(email, name);
+      console.log('Mailchimp Success:', mailchimpResult);
+    } catch (error) {
+      // Log the full error details
+      console.error('Mailchimp Error:', {
+        error: error instanceof Error ? error.message : error,
+        config: {
+          serverPrefix: MAILCHIMP_SERVER_PREFIX,
+          listId: MAILCHIMP_LIST_ID,
+          hasApiKey: !!MAILCHIMP_API_KEY
+        }
+      });
     }
 
-    // Then try to add to database
+    // Try database
     try {
-      console.log('Attempting database operation');
       const newSubscriber = {
         email,
         name,
@@ -131,27 +132,20 @@ export default async function handler(
       };
 
       const dbResult = await client.models.Subscriber.create(newSubscriber);
-      console.log('Database subscription result:', dbResult);
-    } catch (dbError) {
-      console.error('Database error:', dbError);
-      // If Mailchimp worked but database failed, still consider it a partial success
-      if (mailchimpResult) {
-        return res.status(207).json({
-          message: 'Partially subscribed - you will receive email confirmations',
-          warning: 'Database operation failed'
-        });
-      }
-      throw dbError;
+      console.log('Database Success:', dbResult);
+    } catch (error) {
+      console.error('Database Error:', error);
     }
 
-    // Determine appropriate success message
-    const message = mailchimpResult?.status === 'already_subscribed'
-      ? 'You are already subscribed to our newsletter!'
-      : 'Successfully subscribed to our newsletter!';
-
     res.status(200).json({ 
-      message,
-      status: 'success'
+      message: 'Successfully subscribed!',
+      debug: {
+        mailchimpConfig: {
+          serverPrefix: MAILCHIMP_SERVER_PREFIX,
+          listId: MAILCHIMP_LIST_ID,
+          hasApiKey: !!MAILCHIMP_API_KEY
+        }
+      }
     });
 
   } catch (error) {
@@ -159,7 +153,13 @@ export default async function handler(
     res.status(500).json({ 
       message: 'Error processing subscription. Please try again.',
       error: error instanceof Error ? error.message : 'Unknown error',
-      details: process.env.NODE_ENV === 'development' ? error : undefined
+      debug: {
+        mailchimpConfig: {
+          serverPrefix: MAILCHIMP_SERVER_PREFIX,
+          listId: MAILCHIMP_LIST_ID,
+          hasApiKey: !!MAILCHIMP_API_KEY
+        }
+      }
     });
   }
 }
