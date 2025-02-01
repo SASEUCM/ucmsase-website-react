@@ -17,6 +17,7 @@ const QRScanner = () => {
   const [status, setStatus] = useState<{ type: 'success' | 'error' | null, message: string }>({ type: null, message: '' });
   const [loading, setLoading] = useState(false);
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+  const processingRef = useRef(false);  // Track if we're currently processing a scan
 
   useEffect(() => {
     return () => {
@@ -38,6 +39,7 @@ const QRScanner = () => {
 
     scannerRef.current.render(onScanSuccess, onScanError);
     setScanning(true);
+    processingRef.current = false;  // Reset processing flag when starting new scan
   };
 
   const stopScanning = () => {
@@ -46,15 +48,22 @@ const QRScanner = () => {
       scannerRef.current = null;
     }
     setScanning(false);
+    processingRef.current = false;  // Reset processing flag when stopping
   };
 
   const onScanSuccess = async (decodedText: string) => {
-    console.log('QR Code detected, value:', decodedText);
+    // Prevent processing multiple scans simultaneously
+    if (processingRef.current || loading) {
+      console.log('Already processing a scan, skipping...');
+      return;
+    }
+
+    processingRef.current = true;
     setLoading(true);
     setStatus({ type: null, message: '' });
     
     try {
-      console.log('Sending scan data:', { barcode: decodedText, pointsToAdd });
+      console.log('Processing scan:', { barcode: decodedText, pointsToAdd });
       const response = await fetch('/api/scan-qr', {
         method: 'POST',
         headers: {
@@ -86,6 +95,7 @@ const QRScanner = () => {
         type: 'error',
         message: error instanceof Error ? error.message : 'Error processing scan'
       });
+      processingRef.current = false;  // Reset processing flag on error
     } finally {
       setLoading(false);
     }
@@ -120,7 +130,7 @@ const QRScanner = () => {
           onChange={e => setPointsToAdd(Number(e.target.value))}
           min={1}
           step={1}
-          isDisabled={loading}
+          isDisabled={loading || scanning}
         />
 
         <View id="qr-reader" width="100%" maxWidth="500px" margin="0 auto" />
@@ -131,11 +141,12 @@ const QRScanner = () => {
           loadingText="Processing..."
           variation="primary"
           className="blue-button"
+          isDisabled={loading}
         >
           {scanning ? 'Stop Scanning' : 'Start Camera'}
         </Button>
 
-        {scanning && (
+        {scanning && !loading && (
           <Text fontSize="small" textAlign="center">
             Position the QR code within the camera view
           </Text>
