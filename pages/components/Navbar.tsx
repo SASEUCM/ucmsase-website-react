@@ -10,6 +10,7 @@ import {
   Button,
   View,
   Link as AmplifyLink,
+  Divider,
 } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css';
 
@@ -27,6 +28,9 @@ export default function Navbar() {
       console.error('Error signing out:', error);
     }
   };
+
+  // Check if we're on an admin page
+  const isAdminPage = router.pathname.startsWith('/admin');
 
   return (
     <View
@@ -63,34 +67,66 @@ export default function Navbar() {
           </AmplifyLink>
         </Link>
 
-        {/* Nav Links */}
+        {/* Nav Links - Show different links based on whether we're in admin section */}
         <Flex as="nav" direction="row" gap="3rem">
-          <Link href="/about" passHref legacyBehavior>
-            <AmplifyLink className="navbar-link">About Us</AmplifyLink>
-          </Link>
-          <Link href="/events" passHref legacyBehavior>
-            <AmplifyLink className="navbar-link">Events</AmplifyLink>
-          </Link>
-          <Link href="/gallery" passHref legacyBehavior>
-            <AmplifyLink className="navbar-link">Gallery</AmplifyLink>
-          </Link>
-          <Link href="/contact" passHref legacyBehavior>
-            <AmplifyLink className="navbar-link">Contact</AmplifyLink>
-          </Link>
-          <Link href="/sponsors" passHref legacyBehavior>
-            <AmplifyLink className="navbar-link">Sponsors</AmplifyLink>
-          </Link>
-          <Link href="/eboard" passHref legacyBehavior>
-            <AmplifyLink className="navbar-link">E-Board</AmplifyLink>
-          </Link>
+          {isAdminPage && isAdmin ? (
+            <>
+              {/* Admin Navigation Links */}
+              <Link href="/admin/dashboard" passHref legacyBehavior>
+                <AmplifyLink className="navbar-link">Dashboard</AmplifyLink>
+              </Link>
+              <Link href="/admin/users" passHref legacyBehavior>
+                <AmplifyLink className="navbar-link">Users</AmplifyLink>
+              </Link>
+              <Link href="/admin/events" passHref legacyBehavior>
+                <AmplifyLink className="navbar-link">Events</AmplifyLink>
+              </Link>
+              <Link href="/admin/content" passHref legacyBehavior>
+                <AmplifyLink className="navbar-link">Content</AmplifyLink>
+              </Link>
+              <Link href="/admin/scan" passHref legacyBehavior>
+                <AmplifyLink className="navbar-link">Scan QR</AmplifyLink>
+              </Link>
+              <Link href="/admin/subscribers" passHref legacyBehavior>
+                <AmplifyLink className="navbar-link">Subscribers</AmplifyLink>
+              </Link>
+              <Link href="/admin/settings" passHref legacyBehavior>
+                <AmplifyLink className="navbar-link">Settings</AmplifyLink>
+              </Link>
+            </>
+          ) : (
+            <>
+              {/* Regular Navigation Links */}
+              <Link href="/about" passHref legacyBehavior>
+                <AmplifyLink className="navbar-link">About Us</AmplifyLink>
+              </Link>
+              <Link href="/events" passHref legacyBehavior>
+                <AmplifyLink className="navbar-link">Events</AmplifyLink>
+              </Link>
+              <Link href="/gallery" passHref legacyBehavior>
+                <AmplifyLink className="navbar-link">Gallery</AmplifyLink>
+              </Link>
+              <Link href="/profile" passHref legacyBehavior>
+                <AmplifyLink className="navbar-link">My Profile</AmplifyLink>
+              </Link>
+              <Link href="/contact" passHref legacyBehavior>
+                <AmplifyLink className="navbar-link">Contact</AmplifyLink>
+              </Link>
+              <Link href="/sponsors" passHref legacyBehavior>
+                <AmplifyLink className="navbar-link">Sponsors</AmplifyLink>
+              </Link>
+              <Link href="/eboard" passHref legacyBehavior>
+                <AmplifyLink className="navbar-link">E-Board</AmplifyLink>
+              </Link>
+            </>
+          )}
         </Flex>
 
         {/* Auth Area */}
         <Flex alignItems="center" gap="1rem">
           {isAuthenticated ? (
             <>
-              {isAdmin && (
-                <div style={{ display: 'flex', gap: '1rem' }}>
+              {isAdmin && !isAdminPage && (
                 <Link href="/admin" passHref legacyBehavior>
                   <AmplifyLink
                     className="navbar-link"
@@ -99,10 +135,16 @@ export default function Navbar() {
                     Admin Panel
                   </AmplifyLink>
                 </Link>
-                <Link href="/admin/subscribers" passHref legacyBehavior>
-                    <AmplifyLink className="navbar-link">Subscribers</AmplifyLink>
-                  </Link>
-                </div>
+              )}
+              {isAdminPage && (
+                <Link href="/" passHref legacyBehavior>
+                  <AmplifyLink
+                    className="navbar-link"
+                    style={{ fontWeight: 'bold' }}
+                  >
+                    View Site
+                  </AmplifyLink>
+                </Link>
               )}
               <Button
                 onClick={handleSignOut}
