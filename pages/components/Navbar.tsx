@@ -49,9 +49,9 @@ export default function Navbar() {
 
   const renderLinks = (isMobile = false) => {
     const linkStyle = isMobile ? { 
-      padding: '1rem 0', 
+      padding: '0.5rem 0', // Reduced from 1rem to 0.5rem
       display: 'block',
-      fontSize: '1.2rem'
+      fontSize: '1rem' // Reduced from 1.2rem to 1rem
     } : {};
     
     const commonProps = {
@@ -196,7 +196,6 @@ export default function Navbar() {
         {/* Mobile Menu Overlay */}
         {isMobileMenuOpen && (
           <>
-            {/* Backdrop */}
             <View
               position="fixed"
               top="0"
@@ -208,7 +207,6 @@ export default function Navbar() {
               onClick={() => setIsMobileMenuOpen(false)}
             />
 
-            {/* Mobile Menu */}
             <View
               position="fixed"
               top="0"
@@ -216,102 +214,79 @@ export default function Navbar() {
               right="0"
               bottom="0"
               backgroundColor="white"
+              padding="1rem" // Reduced from 2rem to 1rem
               style={{ 
                 zIndex: 101,
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column'
+                overflowY: 'auto',
+                transform: 'translateZ(0)'
               }}
             >
-              {/* Scrollable container */}
-              <div style={{
-                overflowY: 'auto',
-                WebkitOverflowScrolling: 'touch',
-                flex: 1,
-                position: 'relative',
-                width: '100%'
-              }}>
-              {/* Menu Header */}
-              <View
-                position="sticky"
-                top="0"
-                backgroundColor="white"
-                padding="2rem 2rem 1rem 2rem"
-                borderStyle="solid"
-                borderWidth="0 0 1px 0"
-                borderColor="#eee"
-              >
-                <Flex justifyContent="space-between" alignItems="center">
-                  <div style={{ width: '40px' }} />
-                  <Button
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    variation="link"
-                    size="large"
-                  >
-                    ✕
-                  </Button>
-                </Flex>
-              </View>
+              <Flex justifyContent="space-between" marginBottom="1rem"> {/* Reduced from 2rem to 1rem */}
+                <div style={{ width: '40px' }} />
+                <Button
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  variation="link"
+                  size="large"
+                >
+                  ✕
+                </Button>
+              </Flex>
 
-              {/* Menu Content */}
-              <View padding="1rem 2rem 6rem 2rem">
-                <Flex direction="column" gap="1rem" minHeight="calc(100vh - 85px)">
-                  {renderLinks(true)}
+              <Flex direction="column" gap="0.5rem"> {/* Reduced from 1rem to 0.5rem */}
+                {renderLinks(true)}
 
-                  <Divider margin="2rem 0" />
+                <Divider margin="1rem 0" /> {/* Reduced from 2rem to 1rem */}
 
-                  {isAuthenticated ? (
-                    <>
-                      {isAdmin && !isAdminPage && (
-                        <Link href="/admin" passHref legacyBehavior>
-                          <AmplifyLink 
-                            style={{ 
-                              fontWeight: 'bold', 
-                              padding: '1rem 0',
-                              fontSize: '1.2rem'
-                            }}
-                            onClick={() => setIsMobileMenuOpen(false)}
-                          >
-                            Admin Panel
-                          </AmplifyLink>
-                        </Link>
-                      )}
-                      {isAdminPage && (
-                        <Link href="/about" passHref legacyBehavior>
-                          <AmplifyLink 
-                            style={{ 
-                              fontWeight: 'bold', 
-                              padding: '1rem 0',
-                              fontSize: '1.2rem'
-                            }}
-                            onClick={() => setIsMobileMenuOpen(false)}
-                          >
-                            View Site
-                          </AmplifyLink>
-                        </Link>
-                      )}
-                      <Button 
-                        onClick={handleSignOut} 
-                        variation="primary"
-                        size="large"
-                        style={{ marginTop: 'auto', marginBottom: '1rem' }}
-                      >
-                        Sign Out
-                      </Button>
-                    </>
-                  ) : (
+                {isAuthenticated ? (
+                  <>
+                    {isAdmin && !isAdminPage && (
+                      <Link href="/admin" passHref legacyBehavior>
+                        <AmplifyLink 
+                          style={{ 
+                            fontWeight: 'bold', 
+                            padding: '0.5rem 0', // Reduced padding
+                            fontSize: '1rem' // Reduced font size
+                          }}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          Admin Panel
+                        </AmplifyLink>
+                      </Link>
+                    )}
+                    {isAdminPage && (
+                      <Link href="/" passHref legacyBehavior>
+                        <AmplifyLink 
+                          style={{ 
+                            fontWeight: 'bold', 
+                            padding: '0.5rem 0', // Reduced padding
+                            fontSize: '1rem' // Reduced font size
+                          }}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          View Site
+                        </AmplifyLink>
+                      </Link>
+                    )}
                     <Button 
-                      onClick={() => router.push('/login')} 
+                      onClick={handleSignOut} 
                       variation="primary"
-                      size="large"
-                      style={{ marginTop: 'auto', marginBottom: '1rem' }}
+                      size="small" // Changed from large to small
+                      style={{ marginTop: '1rem' }} // Reduced from 2rem to 1rem
                     >
-                      Log In
+                      Sign Out
                     </Button>
-                  )}
-                </Flex>
-              </View>
-              </div>
+                  </>
+                ) : (
+                  <Button 
+                    onClick={() => router.push('/login')} 
+                    variation="primary"
+                    size="small" // Changed from large to small
+                    style={{ marginTop: '1rem' }} // Reduced from 2rem to 1rem
+                  >
+                    Log In
+                  </Button>
+                )}
+              </Flex>
             </View>
           </>
         )}
