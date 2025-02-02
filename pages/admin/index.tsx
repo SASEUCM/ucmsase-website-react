@@ -12,7 +12,7 @@ const AdminPage: React.FC = () => {
 
   useEffect(() => {
     if (!isAuthenticated || !isAdmin) {
-      router.push('/');
+      router.push('/about');
     }
   }, [isAuthenticated, isAdmin, router]);
 

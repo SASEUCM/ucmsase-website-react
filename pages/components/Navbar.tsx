@@ -49,9 +49,9 @@ export default function Navbar() {
 
   const renderLinks = (isMobile = false) => {
     const linkStyle = isMobile ? { 
-      padding: '1rem 0', 
+      padding: '0.5rem 0', // Reduced from 1rem to 0.5rem
       display: 'block',
-      fontSize: '1.2rem'
+      fontSize: '1rem' // Reduced from 1.2rem to 1rem
     } : {};
     
     const commonProps = {
@@ -214,14 +214,14 @@ export default function Navbar() {
               right="0"
               bottom="0"
               backgroundColor="white"
-              padding="2rem"
+              padding="1rem" // Reduced from 2rem to 1rem
               style={{ 
                 zIndex: 101,
                 overflowY: 'auto',
                 transform: 'translateZ(0)'
               }}
             >
-              <Flex justifyContent="space-between" marginBottom="2rem">
+              <Flex justifyContent="space-between" marginBottom="1rem"> {/* Reduced from 2rem to 1rem */}
                 <div style={{ width: '40px' }} />
                 <Button
                   onClick={() => setIsMobileMenuOpen(false)}
@@ -232,10 +232,10 @@ export default function Navbar() {
                 </Button>
               </Flex>
 
-              <Flex direction="column" gap="1rem">
+              <Flex direction="column" gap="0.5rem"> {/* Reduced from 1rem to 0.5rem */}
                 {renderLinks(true)}
 
-                <Divider margin="2rem 0" />
+                <Divider margin="1rem 0" /> {/* Reduced from 2rem to 1rem */}
 
                 {isAuthenticated ? (
                   <>
@@ -244,8 +244,8 @@ export default function Navbar() {
                         <AmplifyLink 
                           style={{ 
                             fontWeight: 'bold', 
-                            padding: '1rem 0',
-                            fontSize: '1.2rem'
+                            padding: '0.5rem 0', // Reduced padding
+                            fontSize: '1rem' // Reduced font size
                           }}
                           onClick={() => setIsMobileMenuOpen(false)}
                         >
@@ -258,8 +258,8 @@ export default function Navbar() {
                         <AmplifyLink 
                           style={{ 
                             fontWeight: 'bold', 
-                            padding: '1rem 0',
-                            fontSize: '1.2rem'
+                            padding: '0.5rem 0', // Reduced padding
+                            fontSize: '1rem' // Reduced font size
                           }}
                           onClick={() => setIsMobileMenuOpen(false)}
                         >
@@ -270,8 +270,8 @@ export default function Navbar() {
                     <Button 
                       onClick={handleSignOut} 
                       variation="primary"
-                      size="large"
-                      style={{ marginTop: '2rem' }}
+                      size="small" // Changed from large to small
+                      style={{ marginTop: '1rem' }} // Reduced from 2rem to 1rem
                     >
                       Sign Out
                     </Button>
@@ -280,8 +280,8 @@ export default function Navbar() {
                   <Button 
                     onClick={() => router.push('/login')} 
                     variation="primary"
-                    size="large"
-                    style={{ marginTop: '2rem' }}
+                    size="small" // Changed from large to small
+                    style={{ marginTop: '1rem' }} // Reduced from 2rem to 1rem
                   >
                     Log In
                   </Button>

@@ -11,7 +11,7 @@ export default function AdminSubscribersPage() {
 
   useEffect(() => {
     if (!isAdmin) {
-      router.push('/');
+      router.push('/about');
     }
   }, [isAdmin, router]);
 

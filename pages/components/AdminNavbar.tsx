@@ -13,7 +13,7 @@ const AdminNavbar = () => {
     try {
       await signOut();
       await checkAuth(); // Refresh auth state after signing out
-      router.push('/');
+      router.push('/about');
     } catch (error) {
       console.error('Error signing out:', error);
     }

@@ -29,7 +29,7 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
   
   useEffect(() => {
     if (router.pathname.startsWith('/admin') && !isAdmin) {
-      router.push('/');
+      router.push('/about');
     }
   }, [router.pathname, isAdmin, router]);
 
