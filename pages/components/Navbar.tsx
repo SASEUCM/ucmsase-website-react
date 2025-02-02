@@ -1,10 +1,11 @@
 // components/Navbar.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '../context/AuthContext';
 import { signOut } from 'aws-amplify/auth';
+import { disableBodyScroll, enableBodyScroll } from 'body-scroll-lock';
 import {
   Flex,
   Button,
@@ -15,22 +16,103 @@ import {
 import '@aws-amplify/ui-react/styles.css';
 
 export default function Navbar() {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const router = useRouter();
   const { isAuthenticated, isAdmin, checkAuth } = useAuth();
+
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      disableBodyScroll(document.body);
+    } else {
+      enableBodyScroll(document.body);
+    }
+  }, [isMobileMenuOpen]);
 
   const handleSignOut = async () => {
     try {
       await signOut({ global: true });
       await checkAuth();
       router.push('/about');
+      setIsMobileMenuOpen(false);
     } catch (error) {
       console.error('Error signing out:', error);
     }
   };
 
-  // Check if we're on an admin page
   const isAdminPage = router.pathname.startsWith('/admin');
+
+  useEffect(() => {
+    const handleRouteChange = () => setIsMobileMenuOpen(false);
+    router.events.on('routeChangeComplete', handleRouteChange);
+    return () => router.events.off('routeChangeComplete', handleRouteChange);
+  }, [router.events]);
+
+  const renderLinks = (isMobile = false) => {
+    const linkStyle = isMobile ? { 
+      padding: '1rem 0', 
+      display: 'block',
+      fontSize: '1.2rem'
+    } : {};
+    
+    const commonProps = {
+      style: linkStyle,
+      onClick: () => isMobile && setIsMobileMenuOpen(false)
+    };
+
+    if (isAdminPage && isAdmin) {
+      return (
+        <>
+          <Link href="/admin/dashboard" passHref legacyBehavior>
+            <AmplifyLink {...commonProps}>Dashboard</AmplifyLink>
+          </Link>
+          <Link href="/admin/users" passHref legacyBehavior>
+            <AmplifyLink {...commonProps}>Users</AmplifyLink>
+          </Link>
+          <Link href="/admin/events" passHref legacyBehavior>
+            <AmplifyLink {...commonProps}>Events</AmplifyLink>
+          </Link>
+          <Link href="/admin/content" passHref legacyBehavior>
+            <AmplifyLink {...commonProps}>Content</AmplifyLink>
+          </Link>
+          <Link href="/admin/scan" passHref legacyBehavior>
+            <AmplifyLink {...commonProps}>Scan QR</AmplifyLink>
+          </Link>
+          <Link href="/admin/subscribers" passHref legacyBehavior>
+            <AmplifyLink {...commonProps}>Subscribers</AmplifyLink>
+          </Link>
+          <Link href="/admin/settings" passHref legacyBehavior>
+            <AmplifyLink {...commonProps}>Settings</AmplifyLink>
+          </Link>
+        </>
+      );
+    }
+
+    return (
+      <>
+        <Link href="/about" passHref legacyBehavior>
+          <AmplifyLink {...commonProps}>About Us</AmplifyLink>
+        </Link>
+        <Link href="/events" passHref legacyBehavior>
+          <AmplifyLink {...commonProps}>Events</AmplifyLink>
+        </Link>
+        <Link href="/gallery" passHref legacyBehavior>
+          <AmplifyLink {...commonProps}>Gallery</AmplifyLink>
+        </Link>
+        <Link href="/profile" passHref legacyBehavior>
+          <AmplifyLink {...commonProps}>My Profile</AmplifyLink>
+        </Link>
+        <Link href="/contact" passHref legacyBehavior>
+          <AmplifyLink {...commonProps}>Contact</AmplifyLink>
+        </Link>
+        <Link href="/sponsors" passHref legacyBehavior>
+          <AmplifyLink {...commonProps}>Sponsors</AmplifyLink>
+        </Link>
+        <Link href="/eboard" passHref legacyBehavior>
+          <AmplifyLink {...commonProps}>E-Board</AmplifyLink>
+        </Link>
+      </>
+    );
+  };
 
   return (
     <View
@@ -40,6 +122,8 @@ export default function Navbar() {
       borderWidth="0 0 1px 0"
       borderColor="#ddd"
       width="100%"
+      position="relative"
+      style={{ zIndex: 50 }}
     >
       <Flex
         margin="0 auto"
@@ -67,103 +151,145 @@ export default function Navbar() {
           </AmplifyLink>
         </Link>
 
-        {/* Nav Links - Show different links based on whether we're in admin section */}
-        <Flex as="nav" direction="row" gap="3rem">
-          {isAdminPage && isAdmin ? (
-            <>
-              {/* Admin Navigation Links */}
-              <Link href="/admin/dashboard" passHref legacyBehavior>
-                <AmplifyLink className="navbar-link">Dashboard</AmplifyLink>
-              </Link>
-              <Link href="/admin/users" passHref legacyBehavior>
-                <AmplifyLink className="navbar-link">Users</AmplifyLink>
-              </Link>
-              <Link href="/admin/events" passHref legacyBehavior>
-                <AmplifyLink className="navbar-link">Events</AmplifyLink>
-              </Link>
-              <Link href="/admin/content" passHref legacyBehavior>
-                <AmplifyLink className="navbar-link">Content</AmplifyLink>
-              </Link>
-              <Link href="/admin/scan" passHref legacyBehavior>
-                <AmplifyLink className="navbar-link">Scan QR</AmplifyLink>
-              </Link>
-              <Link href="/admin/subscribers" passHref legacyBehavior>
-                <AmplifyLink className="navbar-link">Subscribers</AmplifyLink>
-              </Link>
-              <Link href="/admin/settings" passHref legacyBehavior>
-                <AmplifyLink className="navbar-link">Settings</AmplifyLink>
-              </Link>
-            </>
-          ) : (
-            <>
-              {/* Regular Navigation Links */}
-              <Link href="/about" passHref legacyBehavior>
-                <AmplifyLink className="navbar-link">About Us</AmplifyLink>
-              </Link>
-              <Link href="/events" passHref legacyBehavior>
-                <AmplifyLink className="navbar-link">Events</AmplifyLink>
-              </Link>
-              <Link href="/gallery" passHref legacyBehavior>
-                <AmplifyLink className="navbar-link">Gallery</AmplifyLink>
-              </Link>
-              <Link href="/profile" passHref legacyBehavior>
-                <AmplifyLink className="navbar-link">My Profile</AmplifyLink>
-              </Link>
-              <Link href="/contact" passHref legacyBehavior>
-                <AmplifyLink className="navbar-link">Contact</AmplifyLink>
-              </Link>
-              <Link href="/sponsors" passHref legacyBehavior>
-                <AmplifyLink className="navbar-link">Sponsors</AmplifyLink>
-              </Link>
-              <Link href="/eboard" passHref legacyBehavior>
-                <AmplifyLink className="navbar-link">E-Board</AmplifyLink>
-              </Link>
-            </>
-          )}
-        </Flex>
+        {/* Desktop Navigation */}
+        <View display={{ base: 'none', medium: 'flex' }} as="nav">
+          <Flex direction="row" gap="3rem">
+            {renderLinks()}
+          </Flex>
+        </View>
 
-        {/* Auth Area */}
-        <Flex alignItems="center" gap="1rem">
+        {/* Mobile Menu Button */}
+        <Button
+          display={{ medium: 'none' }}
+          onClick={() => setIsMobileMenuOpen(true)}
+          variation="link"
+          size="large"
+        >
+          ☰
+        </Button>
+
+        {/* Desktop Auth Section */}
+        <Flex alignItems="center" gap="1rem" display={{ base: 'none', medium: 'flex' }}>
           {isAuthenticated ? (
             <>
               {isAdmin && !isAdminPage && (
                 <Link href="/admin" passHref legacyBehavior>
-                  <AmplifyLink
-                    className="navbar-link"
-                    style={{ fontWeight: 'bold' }}
-                  >
-                    Admin Panel
-                  </AmplifyLink>
+                  <AmplifyLink style={{ fontWeight: 'bold' }}>Admin Panel</AmplifyLink>
                 </Link>
               )}
               {isAdminPage && (
                 <Link href="/" passHref legacyBehavior>
-                  <AmplifyLink
-                    className="navbar-link"
-                    style={{ fontWeight: 'bold' }}
-                  >
-                    View Site
-                  </AmplifyLink>
+                  <AmplifyLink style={{ fontWeight: 'bold' }}>View Site</AmplifyLink>
                 </Link>
               )}
-              <Button
-                onClick={handleSignOut}
-                variation="primary"
-                className="blue-button"
-              >
+              <Button onClick={handleSignOut} variation="primary">
                 Sign Out
               </Button>
             </>
           ) : (
-            <Button
-              onClick={() => router.push('/login')}
-              variation="primary"
-              className='blue-button'
-            >
+            <Button onClick={() => router.push('/login')} variation="primary">
               Log In
             </Button>
           )}
         </Flex>
+
+        {/* Mobile Menu Overlay */}
+        {isMobileMenuOpen && (
+          <>
+            <View
+              position="fixed"
+              top="0"
+              left="0"
+              right="0"
+              bottom="0"
+              backgroundColor="rgba(0, 0, 0, 0.5)"
+              style={{ zIndex: 100 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+
+            <View
+              position="fixed"
+              top="0"
+              left="0"
+              right="0"
+              bottom="0"
+              backgroundColor="white"
+              padding="2rem"
+              style={{ 
+                zIndex: 101,
+                overflowY: 'auto',
+                transform: 'translateZ(0)'
+              }}
+            >
+              <Flex justifyContent="space-between" marginBottom="2rem">
+                <div style={{ width: '40px' }} />
+                <Button
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  variation="link"
+                  size="large"
+                >
+                  ✕
+                </Button>
+              </Flex>
+
+              <Flex direction="column" gap="1rem">
+                {renderLinks(true)}
+
+                <Divider margin="2rem 0" />
+
+                {isAuthenticated ? (
+                  <>
+                    {isAdmin && !isAdminPage && (
+                      <Link href="/admin" passHref legacyBehavior>
+                        <AmplifyLink 
+                          style={{ 
+                            fontWeight: 'bold', 
+                            padding: '1rem 0',
+                            fontSize: '1.2rem'
+                          }}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          Admin Panel
+                        </AmplifyLink>
+                      </Link>
+                    )}
+                    {isAdminPage && (
+                      <Link href="/" passHref legacyBehavior>
+                        <AmplifyLink 
+                          style={{ 
+                            fontWeight: 'bold', 
+                            padding: '1rem 0',
+                            fontSize: '1.2rem'
+                          }}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          View Site
+                        </AmplifyLink>
+                      </Link>
+                    )}
+                    <Button 
+                      onClick={handleSignOut} 
+                      variation="primary"
+                      size="large"
+                      style={{ marginTop: '2rem' }}
+                    >
+                      Sign Out
+                    </Button>
+                  </>
+                ) : (
+                  <Button 
+                    onClick={() => router.push('/login')} 
+                    variation="primary"
+                    size="large"
+                    style={{ marginTop: '2rem' }}
+                  >
+                    Log In
+                  </Button>
+                )}
+              </Flex>
+            </View>
+          </>
+        )}
       </Flex>
     </View>
   );
