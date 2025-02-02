@@ -277,7 +277,7 @@ export default function Navbar() {
                         </Link>
                       )}
                       {isAdminPage && (
-                        <Link href="/" passHref legacyBehavior>
+                        <Link href="/about" passHref legacyBehavior>
                           <AmplifyLink 
                             style={{ 
                               fontWeight: 'bold', 

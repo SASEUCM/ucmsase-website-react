@@ -11,7 +11,7 @@ export default function ScanPage() {
 
   useEffect(() => {
     if (!isAdmin) {
-      router.push('/');
+      router.push('/about');
     }
   }, [isAdmin, router]);
 
