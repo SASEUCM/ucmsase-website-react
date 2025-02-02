@@ -196,6 +196,7 @@ export default function Navbar() {
         {/* Mobile Menu Overlay */}
         {isMobileMenuOpen && (
           <>
+            {/* Backdrop */}
             <View
               position="fixed"
               top="0"
@@ -207,6 +208,7 @@ export default function Navbar() {
               onClick={() => setIsMobileMenuOpen(false)}
             />
 
+            {/* Mobile Menu */}
             <View
               position="fixed"
               top="0"
@@ -214,79 +216,93 @@ export default function Navbar() {
               right="0"
               bottom="0"
               backgroundColor="white"
-              padding="2rem"
               style={{ 
                 zIndex: 101,
-                overflowY: 'auto',
-                transform: 'translateZ(0)'
+                overflowY: 'scroll',
+                WebkitOverflowScrolling: 'touch',
+                height: '100vh'
               }}
             >
-              <Flex justifyContent="space-between" marginBottom="2rem">
-                <div style={{ width: '40px' }} />
-                <Button
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  variation="link"
-                  size="large"
-                >
-                  ✕
-                </Button>
-              </Flex>
+              {/* Menu Header */}
+              <View
+                position="sticky"
+                top="0"
+                backgroundColor="white"
+                padding="2rem 2rem 1rem 2rem"
+                borderStyle="solid"
+                borderWidth="0 0 1px 0"
+                borderColor="#eee"
+              >
+                <Flex justifyContent="space-between" alignItems="center">
+                  <div style={{ width: '40px' }} />
+                  <Button
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    variation="link"
+                    size="large"
+                  >
+                    ✕
+                  </Button>
+                </Flex>
+              </View>
 
-              <Flex direction="column" gap="1rem">
-                {renderLinks(true)}
+              {/* Menu Content */}
+              <View padding="1rem 2rem 2rem 2rem">
+                <Flex direction="column" gap="1rem">
+                  {renderLinks(true)}
 
-                <Divider margin="2rem 0" />
+                  <Divider margin="2rem 0" />
 
-                {isAuthenticated ? (
-                  <>
-                    {isAdmin && !isAdminPage && (
-                      <Link href="/admin" passHref legacyBehavior>
-                        <AmplifyLink 
-                          style={{ 
-                            fontWeight: 'bold', 
-                            padding: '1rem 0',
-                            fontSize: '1.2rem'
-                          }}
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          Admin Panel
-                        </AmplifyLink>
-                      </Link>
-                    )}
-                    {isAdminPage && (
-                      <Link href="/" passHref legacyBehavior>
-                        <AmplifyLink 
-                          style={{ 
-                            fontWeight: 'bold', 
-                            padding: '1rem 0',
-                            fontSize: '1.2rem'
-                          }}
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          View Site
-                        </AmplifyLink>
-                      </Link>
-                    )}
+                  {isAuthenticated ? (
+                    <>
+                      {isAdmin && !isAdminPage && (
+                        <Link href="/admin" passHref legacyBehavior>
+                          <AmplifyLink 
+                            style={{ 
+                              fontWeight: 'bold', 
+                              padding: '1rem 0',
+                              fontSize: '1.2rem'
+                            }}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            Admin Panel
+                          </AmplifyLink>
+                        </Link>
+                      )}
+                      {isAdminPage && (
+                        <Link href="/" passHref legacyBehavior>
+                          <AmplifyLink 
+                            style={{ 
+                              fontWeight: 'bold', 
+                              padding: '1rem 0',
+                              fontSize: '1.2rem'
+                            }}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            View Site
+                          </AmplifyLink>
+                        </Link>
+                      )}
+                      <Button 
+                        onClick={handleSignOut} 
+                        variation="primary"
+                        size="large"
+                        style={{ marginTop: '2rem' }}
+                      >
+                        Sign Out
+                      </Button>
+                    </>
+                  ) : (
                     <Button 
-                      onClick={handleSignOut} 
+                      onClick={() => router.push('/login')} 
                       variation="primary"
                       size="large"
                       style={{ marginTop: '2rem' }}
                     >
-                      Sign Out
+                      Log In
                     </Button>
-                  </>
-                ) : (
-                  <Button 
-                    onClick={() => router.push('/login')} 
-                    variation="primary"
-                    size="large"
-                    style={{ marginTop: '2rem' }}
-                  >
-                    Log In
-                  </Button>
-                )}
-              </Flex>
+                  )}
+                </Flex>
+              </View>
             </View>
           </>
         )}
