@@ -218,11 +218,19 @@ export default function Navbar() {
               backgroundColor="white"
               style={{ 
                 zIndex: 101,
-                overflowY: 'scroll',
-                WebkitOverflowScrolling: 'touch',
-                height: '100vh'
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column'
               }}
             >
+              {/* Scrollable container */}
+              <div style={{
+                overflowY: 'auto',
+                WebkitOverflowScrolling: 'touch',
+                flex: 1,
+                position: 'relative',
+                width: '100%'
+              }}>
               {/* Menu Header */}
               <View
                 position="sticky"
@@ -246,8 +254,8 @@ export default function Navbar() {
               </View>
 
               {/* Menu Content */}
-              <View padding="1rem 2rem 2rem 2rem">
-                <Flex direction="column" gap="1rem">
+              <View padding="1rem 2rem 6rem 2rem">
+                <Flex direction="column" gap="1rem" minHeight="calc(100vh - 85px)">
                   {renderLinks(true)}
 
                   <Divider margin="2rem 0" />
@@ -286,7 +294,7 @@ export default function Navbar() {
                         onClick={handleSignOut} 
                         variation="primary"
                         size="large"
-                        style={{ marginTop: '2rem' }}
+                        style={{ marginTop: 'auto', marginBottom: '1rem' }}
                       >
                         Sign Out
                       </Button>
@@ -296,13 +304,14 @@ export default function Navbar() {
                       onClick={() => router.push('/login')} 
                       variation="primary"
                       size="large"
-                      style={{ marginTop: '2rem' }}
+                      style={{ marginTop: 'auto', marginBottom: '1rem' }}
                     >
                       Log In
                     </Button>
                   )}
                 </Flex>
               </View>
+              </div>
             </View>
           </>
         )}
