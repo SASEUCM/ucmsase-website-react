@@ -7,9 +7,9 @@ const components = {
     const { tokens } = useTheme();
 
     return (
-      <View textAlign="center" padding={tokens.space.large}>
+      <View textAlign="center" padding={tokens.space.medium}>
         <Image
-          alt="Amplify logo"
+          alt="SASE logo"
           src="logo.png"
           width="200px"
           height="auto"
@@ -22,7 +22,7 @@ const components = {
     const { tokens } = useTheme();
 
     return (
-      <View textAlign="center" padding={tokens.space.large}>
+      <View textAlign="center" padding={tokens.space.medium}>
         <Text color={tokens.colors.neutral[80]}>
           &copy; All Rights Reserved
         </Text>
@@ -36,8 +36,10 @@ const components = {
 
       return (
         <Heading
-          padding={`${tokens.space.xl} 0 0 ${tokens.space.xl}`}
+          padding={{ base: `${tokens.space.medium} 0 0 ${tokens.space.medium}`, medium: `${tokens.space.xl} 0 0 ${tokens.space.xl}` }}
           level={3}
+          fontSize={{ base: '1.5rem', medium: '2rem' }}
+          textAlign={{ base: 'center', medium: 'left' }} // Centered on mobile, left on larger screens
         >
           Sign in to your account
         </Heading>
@@ -67,8 +69,10 @@ const components = {
 
       return (
         <Heading
-          padding={`${tokens.space.xl} 0 0 ${tokens.space.xl}`}
+          padding={{ base: `${tokens.space.medium} 0 0 ${tokens.space.medium}`, medium: `${tokens.space.xl} 0 0 ${tokens.space.xl}` }}
           level={3}
+          fontSize={{ base: '1.5rem', medium: '2rem' }}
+          textAlign={{ base: 'center', medium: 'left' }} // Centered on mobile, left on larger screens
         >
           Create a new account
         </Heading>
@@ -91,13 +95,16 @@ const components = {
       );
     },
   },
+
   ConfirmSignUp: {
     Header() {
       const { tokens } = useTheme();
       return (
         <Heading
-          padding={`${tokens.space.xl} 0 0 ${tokens.space.xl}`}
+          padding={{ base: `${tokens.space.medium} 0 0 ${tokens.space.medium}`, medium: `${tokens.space.xl} 0 0 ${tokens.space.xl}` }}
           level={3}
+          fontSize={{ base: '1.5rem', medium: '2rem' }}
+          textAlign={{ base: 'center', medium: 'left' }} // Centered on mobile, left on larger screens
         >
           Enter Information:
         </Heading>
@@ -107,13 +114,16 @@ const components = {
       return <Text>Footer Information</Text>;
     },
   },
+
   SetupTotp: {
     Header() {
       const { tokens } = useTheme();
       return (
         <Heading
-          padding={`${tokens.space.xl} 0 0 ${tokens.space.xl}`}
+          padding={{ base: `${tokens.space.medium} 0 0 ${tokens.space.medium}`, medium: `${tokens.space.xl} 0 0 ${tokens.space.xl}` }}
           level={3}
+          fontSize={{ base: '1.5rem', medium: '2rem' }}
+          textAlign={{ base: 'center', medium: 'left' }} // Centered on mobile, left on larger screens
         >
           Enter Information:
         </Heading>
@@ -123,13 +133,16 @@ const components = {
       return <Text>Footer Information</Text>;
     },
   },
+
   ConfirmSignIn: {
     Header() {
       const { tokens } = useTheme();
       return (
         <Heading
-          padding={`${tokens.space.xl} 0 0 ${tokens.space.xl}`}
+          padding={{ base: `${tokens.space.medium} 0 0 ${tokens.space.medium}`, medium: `${tokens.space.xl} 0 0 ${tokens.space.xl}` }}
           level={3}
+          fontSize={{ base: '1.5rem', medium: '2rem' }}
+          textAlign={{ base: 'center', medium: 'left' }} // Centered on mobile, left on larger screens
         >
           Enter Information:
         </Heading>
@@ -139,13 +152,16 @@ const components = {
       return <Text>Footer Information</Text>;
     },
   },
+
   ForgotPassword: {
     Header() {
       const { tokens } = useTheme();
       return (
         <Heading
-          padding={`${tokens.space.xl} 0 0 ${tokens.space.xl}`}
+          padding={{ base: `${tokens.space.medium} 0 0 ${tokens.space.medium}`, medium: `${tokens.space.xl} 0 0 ${tokens.space.xl}` }}
           level={3}
+          fontSize={{ base: '1.5rem', medium: '2rem' }}
+          textAlign={{ base: 'center', medium: 'left' }} // Centered on mobile, left on larger screens
         >
           Enter Information:
         </Heading>
@@ -155,13 +171,16 @@ const components = {
       return <Text>Footer Information</Text>;
     },
   },
+
   ConfirmResetPassword: {
     Header() {
       const { tokens } = useTheme();
       return (
         <Heading
-          padding={`${tokens.space.xl} 0 0 ${tokens.space.xl}`}
+          padding={{ base: `${tokens.space.medium} 0 0 ${tokens.space.medium}`, medium: `${tokens.space.xl} 0 0 ${tokens.space.xl}` }}
           level={3}
+          fontSize={{ base: '1.5rem', medium: '2rem' }}
+          textAlign={{ base: 'center', medium: 'left' }} // Centered on mobile, left on larger screens
         >
           Enter Information:
         </Heading>
@@ -177,63 +196,72 @@ const formFields = {
   signIn: {
     username: {
       placeholder: 'Enter your email',
+      label: 'Email',
     },
+    password: {
+      label: 'Password',
+    }
   },
   signUp: {
+    email: {
+      label: 'Email',
+      placeholder: 'Enter your email',
+      order: 1,
+    },
     password: {
-      label: 'Password:',
-      placeholder: 'Enter your Password:',
-      isRequired: false,
+      label: 'Password',
+      placeholder: 'Create a password',
       order: 2,
     },
     confirm_password: {
-      label: 'Confirm Password:',
-      order: 1,
+      label: 'Confirm Password',
+      placeholder: 'Confirm your password',
+      order: 3,
     },
   },
   forceNewPassword: {
     password: {
-      placeholder: 'Enter your Password:',
+      label: 'New Password',
+      placeholder: 'Enter new password',
     },
   },
   forgotPassword: {
     username: {
-      placeholder: 'Enter your email:',
+      label: 'Email',
+      placeholder: 'Enter your email',
     },
   },
   confirmResetPassword: {
     confirmation_code: {
-      placeholder: 'Enter your Confirmation Code:',
-      label: 'New Label',
-      isRequired: false,
+      label: 'Confirmation Code',
+      placeholder: 'Enter confirmation code',
+      isRequired: true,
     },
-    confirm_password: {
-      placeholder: 'Enter your Password Please:',
+    password: {
+      label: 'New Password',
+      placeholder: 'Enter new password',
     },
   },
   setupTotp: {
     QR: {
-      totpIssuer: 'test issuer',
-      totpUsername: 'amplify_qr_test_user',
+      totpIssuer: 'SASE UC Merced',
+      totpUsername: '@sase.org',
     },
     confirmation_code: {
-      label: 'New Label',
-      placeholder: 'Enter your Confirmation Code:',
-      isRequired: false,
+      label: 'Confirmation Code',
+      placeholder: 'Enter authentication code',
     },
   },
   confirmSignIn: {
     confirmation_code: {
-      label: 'New Label',
-      placeholder: 'Enter your Confirmation Code:',
-      isRequired: false,
+      label: 'Confirmation Code',
+      placeholder: 'Enter authentication code',
     },
   },
 };
 
 export { components, formFields };
 
-// just needed to satisfy the linter
 export default function AuthUI() {
   return null;
 }
