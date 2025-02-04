@@ -7,15 +7,26 @@ export default function AboutPage() {
   return (
     <View
       as="main"
-      /*backgroundColor="#f5f5f5"*/
       backgroundColor="transparent"
+      /*backgroundColor="#f5f5f5"*/
       minHeight="100vh"
       padding="2rem"
     >
+      {/* AboutUs Component with Border and Background */}
+      <View
+        backgroundColor="white"
+        borderRadius="medium"
+        padding="2rem"
+        boxShadow="medium"
+        border="1px solid #e0e0e0" // Add a border
+      >
+        <AboutUs />
+      </View>
+
       {/* SASE Board Image */}
       <View
         textAlign="center"
-        marginBottom="2rem"
+        marginTop="2rem" // Add margin to separate from AboutUs
       >
         <Image
           src="/SaseBoard.jpeg" // Replace with the actual path to your image
@@ -34,9 +45,6 @@ export default function AboutPage() {
           Our dedicated SASE board working together to bring you the best experience.
         </Text>
       </View>
-
-      {/* AboutUs Component */}
-      <AboutUs />
     </View>
   );
 }
