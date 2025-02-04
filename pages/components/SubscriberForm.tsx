@@ -83,7 +83,7 @@ export default function SubscriberForm() {
       boxShadow="medium"
       backgroundColor="white"
       padding="2rem"
-      maxWidth="800px"
+      maxWidth="1000px"
       margin="0 auto"
     >
       <Heading 

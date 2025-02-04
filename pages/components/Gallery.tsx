@@ -26,21 +26,28 @@ const GALLERY_ITEMS: GalleryItem[] = [
     id: '1',
     title: 'Fall 2023 General Meeting',
     description: 'Members gathering for our first general meeting of the semester',
-    imageUrl: '/api/placeholder/400/300',
+    imageUrl: 'gang.png',
     date: 'September 15, 2023'
   },
   {
     id: '2',
     title: 'Industry Network Night',
     description: 'Networking event with industry professionals',
-    imageUrl: '/api/placeholder/400/300',
+    imageUrl: 'conferencepic.png',
     date: 'October 5, 2023'
   },
   {
     id: '3',
     title: 'Technical Workshop',
     description: 'Python programming workshop for beginners',
-    imageUrl: '/api/placeholder/400/300',
+    imageUrl: 'golfcartpic.png',
+    date: 'October 20, 2023'
+  },
+  {
+    id: '4',
+    title: 'Technical Workshop',
+    description: 'Python programming workshop for beginners',
+    imageUrl: 'standingonbusiness.png',
     date: 'October 20, 2023'
   },
 ];
@@ -97,6 +104,7 @@ export default function Gallery() {
       </Grid>
 
       {/* Image Detail View */}
+      {/*
       {selectedImage && (
         <Flex
           position="fixed"
@@ -152,6 +160,7 @@ export default function Gallery() {
           </View>
         </Flex>
       )}
+        */}
 
       <style jsx global>{`
         .gallery-item:hover {

@@ -104,9 +104,11 @@ export default function Navbar() {
         <Link href="/contact" passHref legacyBehavior>
           <AmplifyLink {...commonProps}>Contact</AmplifyLink>
         </Link>
+        {/*}
         <Link href="/sponsors" passHref legacyBehavior>
           <AmplifyLink {...commonProps}>Sponsors</AmplifyLink>
         </Link>
+        */}
         <Link href="/eboard" passHref legacyBehavior>
           <AmplifyLink {...commonProps}>E-Board</AmplifyLink>
         </Link>

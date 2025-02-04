@@ -46,7 +46,7 @@ export default function AboutPage() {
         marginTop="2rem" // Add margin to separate from AboutUs
       >
         <Image
-          src="/golfcartpic.png" // Replace with the actual path to your image
+          src="golfcartpic.png" // Replace with the actual path to your image
           alt="SASE Board"
           width="100%"
           maxWidth="800px"

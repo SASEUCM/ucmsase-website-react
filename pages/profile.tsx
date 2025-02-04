@@ -18,7 +18,7 @@ export default function ProfilePage() {
   if (!isAuthenticated) return null;
 
   return (
-    <View padding="2rem">
+    <View padding="2rem" borderRadius="medium">
       <Heading level={2} marginBottom="2rem">My Profile</Heading>
       <UserQRCode />
     </View>

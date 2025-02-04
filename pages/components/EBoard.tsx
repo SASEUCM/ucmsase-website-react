@@ -127,6 +127,7 @@ const EBoard: React.FC = () => {
 
   return (
     <View
+      borderRadius="medium"
       backgroundColor="white"
       padding={tokens.space.large.value} // Convert token to string
       maxWidth="1200px"
