@@ -77,6 +77,9 @@ export default function Navbar() {
           <Link href="/admin/scan" passHref legacyBehavior>
             <AmplifyLink {...commonProps}>Scan QR</AmplifyLink>
           </Link>
+          <Link href="/schedule" passHref legacyBehavior>
+            <AmplifyLink {...commonProps}>Schedule</AmplifyLink>
+          </Link>
           <Link href="/admin/subscribers" passHref legacyBehavior>
             <AmplifyLink {...commonProps}>Subscribers</AmplifyLink>
           </Link>
@@ -100,6 +103,9 @@ export default function Navbar() {
         </Link>
         <Link href="/profile" passHref legacyBehavior>
           <AmplifyLink {...commonProps}>My Profile</AmplifyLink>
+        </Link>
+        <Link href="/schedule" passHref legacyBehavior>
+          <AmplifyLink {...commonProps}>Schedule</AmplifyLink>
         </Link>
         <Link href="/contact" passHref legacyBehavior>
           <AmplifyLink {...commonProps}>Contact</AmplifyLink>

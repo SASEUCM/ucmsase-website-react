@@ -46,7 +46,7 @@ const BOARD_SECTIONS: BoardSection[] = [
         name: "Naomi Baba",
         position: "Secretary",
         imageUrl: "/NaomiBaba.jpg",
-        description: "Description for Naomi Baba",
+        description: "Hi! I'm Naomi Baba and I'm a sophomore studying Civil Engineering. I currently serve as the Secretary for the UC Merced SASE chapter. Some of my interests include water resources, hydrology, and waste management. Feel free to reach out via email: nbaba@ucmerced.edu!",
       },
     ],
   },
