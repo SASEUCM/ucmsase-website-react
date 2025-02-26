@@ -23,7 +23,7 @@ const getBaseUrl = () => {
   }
     */
   // Fallback for server-side rendering
-  return process.env.NEXT_PUBLIC_BASE_URL || 'https://4f0e-169-236-78-22.ngrok-free.app';
+  return process.env.NEXT_PUBLIC_BASE_URL || 'https://main.d2w053eaz1v9cw.amplifyapp.com';
 };
 
 const QRScanner = () => {
