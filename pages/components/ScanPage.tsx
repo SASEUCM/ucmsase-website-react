@@ -1,4 +1,4 @@
-// pages/scan.tsx
+// components/ScanPage.tsx
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { 
@@ -19,12 +19,15 @@ const client = generateClient<Schema>();
 
 const ScanPage = () => {
   const router = useRouter();
-  const { isAuthenticated, userEmail } = useAuth();
+  const { isAuthenticated, userEmail, checkAuth } = useAuth();
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [userPoints, setUserPoints] = useState<Schema['UserPoints']['type'] | null>(null);
   const [status, setStatus] = useState<{ type: 'success' | 'error' | null, message: string }>({ type: null, message: '' });
   const [processed, setProcessed] = useState(false);
+  const [autoRedirecting, setAutoRedirecting] = useState(false);
+
+  console.log("Scan page loaded, router query:", router.query); // Debugging
 
   // Define processScan as a useCallback to avoid dependency warnings
   const processScan = useCallback(async (codeData: string, userBarcode: string | null | undefined) => {
@@ -77,20 +80,64 @@ const ScanPage = () => {
     }
   }, []);
 
+  // Check for redirects from another page (like AppContent in _app.tsx)
+  useEffect(() => {
+    // Specifically listen for redirects that might come from higher-level layouts
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      // If we're in the middle of showing results, prevent automatic redirects
+      if (processed && !autoRedirecting) {
+        event.preventDefault();
+        event.returnValue = '';
+        return '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    // Clean up
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [processed, autoRedirecting]);
+
   // Process scan when the page loads and the user is authenticated
   useEffect(() => {
     const checkAuth = async () => {
-      // If not authenticated, we'll wait for the auth state to update
+      // Code param will be available after router is ready
+      if (!router.isReady) return;
+
+      // If not authenticated, preserve the code parameter for after login
       if (!isAuthenticated) {
+        // Get the code param to preserve it
+        const { code } = router.query;
+        if (code && typeof code === 'string') {
+          // Store code in sessionStorage before redirecting to login
+          sessionStorage.setItem('pendingScanCode', code);
+          console.log('Saved code to sessionStorage for after login:', code);
+        }
         setLoading(false);
         return;
       }
 
-      // Code param will be available after router is ready
-      if (!router.isReady) return;
+      // After login, first check if we have a stored code from before login
+      let codeToProcess = router.query.code;
+      const storedCode = sessionStorage.getItem('pendingScanCode');
+      
+      if (!codeToProcess && storedCode) {
+        console.log('Retrieved stored code from session:', storedCode);
+        codeToProcess = storedCode;
+        // Clear the stored code so we don't process it again
+        sessionStorage.removeItem('pendingScanCode');
+        
+        // If we're using the stored code instead of the URL param, update the URL
+        // This is optional but keeps the URL in sync with what we're processing
+        if (!router.query.code && typeof window !== 'undefined') {
+          const newUrl = `${window.location.pathname}?code=${encodeURIComponent(storedCode)}`;
+          router.replace(newUrl, undefined, { shallow: true });
+        }
+      }
 
-      const { code } = router.query;
-      if (!code || typeof code !== 'string') {
+      if (!codeToProcess || typeof codeToProcess !== 'string') {
         setStatus({
           type: 'error',
           message: 'Invalid QR code. Missing data.'
@@ -98,6 +145,8 @@ const ScanPage = () => {
         setLoading(false);
         return;
       }
+
+      console.log("Processing code:", codeToProcess); // Debugging
 
       try {
         // First get the user's points record
@@ -126,7 +175,7 @@ const ScanPage = () => {
         console.log('Found user record with barcode:', userRecord.barcode);
         
         // Now process the scan
-        await processScan(code, userRecord.barcode);
+        await processScan(codeToProcess, userRecord.barcode);
       } catch (error) {
         console.error('Error initializing scan:', error);
         setStatus({
@@ -139,7 +188,7 @@ const ScanPage = () => {
     };
 
     checkAuth();
-  }, [isAuthenticated, router.isReady, router.query, userEmail, processScan]);
+  }, [isAuthenticated, router.isReady, router.query, userEmail, processScan, router]);
 
   const processUserQR = async (scannedBarcode: string, userBarcode: string) => {
     console.log('Processing user QR code');
@@ -199,21 +248,30 @@ const ScanPage = () => {
     });
   };
 
+  // Only navigate after user explicitly clicks a button
   const handleNavigate = (path: string) => {
+    // Set flag to indicate we're performing a user-initiated redirect
+    setAutoRedirecting(true);
     router.push(path);
   };
 
+  const handleLogin = () => {
+    // The code parameter will be saved to sessionStorage in the useEffect
+    router.push('/login');
+  };
+
   if (!isAuthenticated) {
+    // Show login prompt with message about pending scan
     return (
       <View padding="2rem">
         <Card>
           <Flex direction="column" alignItems="center" padding="2rem" gap="1rem">
             <Heading level={3}>Login Required</Heading>
-            <Text>Please log in to claim your points</Text>
+            <Text>Please log in to process this QR code and claim your points</Text>
             <Button 
               variation="primary" 
               className="blue-button"
-              onClick={() => router.push('/login')}
+              onClick={handleLogin}
             >
               Log In Now
             </Button>

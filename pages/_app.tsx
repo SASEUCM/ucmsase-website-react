@@ -32,10 +32,19 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   
   useEffect(() => {
+    // Only redirect from admin pages if not an admin
     if (router.pathname.startsWith('/admin') && !isAdmin) {
       router.push('/about');
+      return;
     }
-  }, [router.pathname, isAdmin, router]);
+
+    // Don't redirect from the scan page if we have a 'code' query parameter
+    // This prevents the auto-redirect after processing a QR code
+    if (router.pathname === '/scan' && router.query.code) {
+      // Don't redirect, allow the scan page to handle this
+      return;
+    }
+  }, [router.pathname, isAdmin, router, router.query]);
 
   return (
     <>
@@ -53,6 +62,8 @@ function AppContent({ Component, pageProps }: AppPropsWithLayout) {
   const [isLoading, setIsLoading] = useState(true);
   
   const publicRoutes = ['/', '/about', '/events', '/gallery', '/contact', '/sponsors', '/eboard'];
+  // Special handling for scan route with code parameter
+  const isScanWithCode = router.pathname === '/scan' && router.query.code;
   const isPublicRoute = publicRoutes.includes(router.pathname);
 
   useEffect(() => {
@@ -69,8 +80,8 @@ function AppContent({ Component, pageProps }: AppPropsWithLayout) {
     return <LoadingScreen />;
   }
 
-  // If route is public or user is authenticated, load the page
-  if (isPublicRoute || isAuthenticated) {
+  // If route is public, scan page with code, or user is authenticated, load the page
+  if (isPublicRoute || isAuthenticated || isScanWithCode) {
     return (
       <NavigationWrapper>
         <Component {...pageProps} />
@@ -85,8 +96,17 @@ function AppContent({ Component, pageProps }: AppPropsWithLayout) {
         // When we get here, we know the user is authenticated
         // Trigger a check of the auth state
         checkAuth().then(() => {
-          // After checking auth, redirect to about page
-          router.push('/about');
+          // Special case for scan page with code: go back to scan page with code after login
+          const pendingScanCode = sessionStorage.getItem('pendingScanCode');
+          if (pendingScanCode && router.pathname === '/scan') {
+            router.push(`/scan?code=${encodeURIComponent(pendingScanCode)}`);
+          } else if (pendingScanCode) {
+            // If we have a stored code but we're not on the scan page, go to scan page
+            router.push(`/scan?code=${encodeURIComponent(pendingScanCode)}`);
+          } else {
+            // Default case - no pending scan code
+            router.push('/about');
+          }
         });
 
         return (

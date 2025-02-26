@@ -17,11 +17,13 @@ import { QRCodeSVG } from 'qrcode.react';
 
 // Get the base URL - in development vs production
 const getBaseUrl = () => {
+  /*
   if (typeof window !== 'undefined') {
     return window.location.origin;
   }
+    */
   // Fallback for server-side rendering
-  return process.env.NEXT_PUBLIC_BASE_URL || 'https://yourdomain.com';
+  return process.env.NEXT_PUBLIC_BASE_URL || 'https://4f0e-169-236-78-22.ngrok-free.app';
 };
 
 const QRScanner = () => {
@@ -56,6 +58,7 @@ const QRScanner = () => {
       // Create a URL that points to your website with the encoded data
       const baseUrl = getBaseUrl();
       qrData = `${baseUrl}/scan?code=${encodeURIComponent(rawData)}`;
+      console.log("Generated Event QR URL:", qrData);  // Log for debugging
     } else {
       qrData = rawData;
     }
@@ -78,29 +81,50 @@ const QRScanner = () => {
         stopScanning();
       }
       
-      // Create a new scanner instance with proper configuration
-      scannerRef.current = new Html5QrcodeScanner(
-        "qr-reader",
-        {
-          fps: 10,
-          qrbox: { width: 250, height: 250 },
-          rememberLastUsedCamera: true,
-          showTorchButtonIfSupported: true,
-        },
-        false // Do not immediately render - we want to call render ourselves
-      );
-  
-      // Manually render the scanner with our callbacks
-      scannerRef.current.render(onScanSuccess, onScanError);
-      console.log('Scanner rendered successfully');
+      // Set scanning state to true first to update UI
       setScanning(true);
-      processingRef.current = false;  // Reset processing flag when starting new scan
+      
+      // Small delay to make sure the DOM element is available
+      setTimeout(() => {
+        try {
+          // Make sure DOM is ready for scanner
+          const qrReaderElement = document.getElementById("qr-reader");
+          if (!qrReaderElement) {
+            throw new Error('QR reader container not found in DOM');
+          }
+          
+          // Create a new scanner instance with proper configuration
+          scannerRef.current = new Html5QrcodeScanner(
+            "qr-reader",
+            {
+              fps: 10,
+              qrbox: { width: 250, height: 250 },
+              rememberLastUsedCamera: true,
+              showTorchButtonIfSupported: true,
+            },
+            false // Do not immediately render - we want to call render ourselves
+          );
+      
+          // Manually render the scanner with our callbacks
+          scannerRef.current.render(onScanSuccess, onScanError);
+          console.log('Scanner rendered successfully');
+          processingRef.current = false;  // Reset processing flag when starting new scan
+        } catch (error) {
+          console.error('Error starting scanner:', error);
+          setStatus({
+            type: 'error', 
+            message: error instanceof Error ? error.message : 'Error starting scanner'
+          });
+          setScanning(false);
+        }
+      }, 100); // Short delay to allow React to update the DOM
     } catch (error) {
       console.error('Error starting scanner:', error);
       setStatus({
         type: 'error', 
         message: error instanceof Error ? error.message : 'Error starting scanner'
       });
+      setScanning(false);
     }
   };
 
@@ -246,7 +270,15 @@ const QRScanner = () => {
                 isDisabled={loading || scanning}
               />
 
-              <View id="qr-reader" width="100%" maxWidth="500px" margin="0 auto" />
+              {/* Explicit div for the scanner */}
+              <div 
+                id="qr-reader" 
+                style={{
+                  width: '100%',
+                  maxWidth: '500px',
+                  margin: '0 auto'
+                }}
+              ></div>
 
               <Button
                 onClick={scanning ? stopScanning : startScanning}

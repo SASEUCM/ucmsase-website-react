@@ -135,8 +135,11 @@ const UserQRCode = () => {
     if (!barcode) return;
     
     const baseUrl = getBaseUrl();
+    // Make sure this URL matches your Next.js routing structure
     const url = `${baseUrl}/scan?code=${encodeURIComponent(barcode)}`;
     setQrUrl(url);
+    
+    console.log("Generated QR URL:", url);  // Log for debugging
   };
 
   const startScanning = () => {
