@@ -284,11 +284,17 @@ const Navbar = () => {
   };
 
   // Which set of links to render
-  const renderLinks = () => {
+  const renderLinks = (isMobile = false) => {
     const linksToRender =
       router.pathname.startsWith('/admin') && isAdmin
         ? adminNavLinks
         : navLinks;
+
+    const linkStyle = isMobile ? { 
+      padding: '0.5rem 0',
+      display: 'block',
+      fontSize: '1rem'
+    } : {};
 
     return (
       <>
@@ -296,6 +302,7 @@ const Navbar = () => {
           <Link key={id} href={path} passHref legacyBehavior>
             <AmplifyLink
               className="nav-link"
+              style={linkStyle}
               ref={(el) => {
                 if (el) linksRef.current.set(id, el);
               }}
@@ -307,39 +314,6 @@ const Navbar = () => {
             </AmplifyLink>
           </Link>
         ))}
-
-        {/* Toggle between Admin Panel & View Site for admins */}
-        {isAdmin && !router.pathname.startsWith('/admin') && (
-          <Link href="/admin" passHref legacyBehavior>
-            <AmplifyLink
-              className="nav-link"
-              ref={(el) => {
-                if (el) linksRef.current.set('admin-panel', el);
-              }}
-              onMouseEnter={() => handleLinkHover('admin-panel', true)}
-              onMouseLeave={() => handleLinkHover('admin-panel', false)}
-              onClick={handleMobileLinkClick}
-            >
-              Admin Panel
-            </AmplifyLink>
-          </Link>
-        )}
-
-        {isAdmin && router.pathname.startsWith('/admin') && (
-          <Link href="/" passHref legacyBehavior>
-            <AmplifyLink
-              className="nav-link"
-              ref={(el) => {
-                if (el) linksRef.current.set('view-site', el);
-              }}
-              onMouseEnter={() => handleLinkHover('view-site', true)}
-              onMouseLeave={() => handleLinkHover('view-site', false)}
-              onClick={handleMobileLinkClick}
-            >
-              View Site
-            </AmplifyLink>
-          </Link>
-        )}
       </>
     );
   };
@@ -354,7 +328,7 @@ const Navbar = () => {
         background: '#0a1930',
         position: 'fixed',
         overflow: 'hidden',
-        zIndex: 999,
+        zIndex: 100,
         top: 0,
         left: 0,
       }}
@@ -380,7 +354,7 @@ const Navbar = () => {
         height="100%"
         justifyContent="space-between"
         alignItems="center"
-        style={{ position: 'relative', zIndex: 1000 }}
+        style={{ position: 'relative', zIndex: 1 }}
       >
         {/* Logo */}
         <Link href="/about" passHref legacyBehavior>
@@ -409,43 +383,111 @@ const Navbar = () => {
               )}
             </button>
 
-            {/* Full-screen mobile menu */}
+          {/* Mobile Menu Overlay */}
             {isMobileMenuOpen && (
-              <div className="mobile-menu">
-                <button
+              <>
+                {/* Backdrop */}
+                <View
+                  style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    zIndex: 100,
+                  }}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="close-button"
-                >
-                  <X size={24} color="white" />
-                </button>
+                />
 
-                {/* Pushed content down slightly below close button */}
-                <div className="mobile-menu-content">
-                  <Flex
-                    direction="column"
-                    alignItems="center"
-                    justifyContent="center"
-                    gap="1rem"
-                  >
-                    {renderLinks()}
+                {/* Mobile Menu */}
+                <View
+                  style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: '#0a1930',
+                    padding: '1rem',
+                    zIndex: 101,
+                    overflowY: 'auto',
+                    transform: 'translateZ(0)'
+                  }}
+                >
+                  {/* Menu Header */}
+                  <Flex justifyContent="space-between" marginBottom="1rem">
+                    <div style={{ width: '40px' }} />
+                    <Button
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      variation="link"
+                      size="large"
+                    >
+                      ✕
+                    </Button>
+                  </Flex>
+
+                  {/* Menu Content */}
+                  <Flex direction="column" gap="0.5rem">
+                    {renderLinks(true)}
+
+                    <hr style={{ margin: '1rem 0', border: '0.5px solid #eee' }} />
+
                     {isAuthenticated ? (
-                      <Button onClick={handleSignOut} className="auth-button">
-                        Sign Out
-                      </Button>
+                      <>
+                        {isAdmin && !router.pathname.startsWith('/admin') && (
+                          <Link href="/admin" passHref legacyBehavior>
+                            <AmplifyLink 
+                              style={{ 
+                                fontWeight: 'bold', 
+                                padding: '0.5rem 0',
+                                fontSize: '1rem'
+                              }}
+                              onClick={() => setIsMobileMenuOpen(false)}
+                            >
+                              Admin Panel
+                            </AmplifyLink>
+                          </Link>
+                        )}
+                        {isAdmin && router.pathname.startsWith('/admin') && (
+                          <Link href="/" passHref legacyBehavior>
+                            <AmplifyLink 
+                              style={{ 
+                                fontWeight: 'bold', 
+                                padding: '0.5rem 0',
+                                fontSize: '1rem'
+                              }}
+                              onClick={() => setIsMobileMenuOpen(false)}
+                            >
+                              View Site
+                            </AmplifyLink>
+                          </Link>
+                        )}
+                        <Button 
+                          onClick={handleSignOut} 
+                          variation="primary"
+                          size="small"
+                          style={{ marginTop: '1rem' }}
+                        >
+                          Sign Out
+                        </Button>
+                      </>
                     ) : (
-                      <Button
+                      <Button 
                         onClick={() => {
                           router.push('/login');
                           setIsMobileMenuOpen(false);
-                        }}
-                        className="auth-button"
+                        }} 
+                        variation="primary"
+                        size="small"
+                        style={{ marginTop: '1rem' }}
                       >
                         Log In
                       </Button>
                     )}
                   </Flex>
-                </div>
-              </div>
+                </View>
+              </>
             )}
           </>
         ) : (
@@ -530,35 +572,7 @@ const Navbar = () => {
           z-index: 50;
         }
 
-        /* Full-screen Mobile Menu Overlay */
-        .mobile-menu {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100vw;
-          /* Replace 100vh with a calc using our custom var: */
-          height: calc(var(--vh, 1vh) * 100);
-          background: #0a1930;
-          z-index: 9999;
-          animation: fadeIn 0.3s ease-out;
-          display: flex;
-          flex-direction: column;
-          overflow-y: auto; /* allow scrolling if content is tall */
-        }
-
-        /* Close button in top-right corner */
-        .close-button {
-          position: absolute;
-          top: 1rem;
-          right: 1rem;
-          background: none;
-          border: none;
-          cursor: pointer;
-        }
-
-        .mobile-menu-content {
-          margin-top: 4rem; /* Adjust to push content below X button */
-        }
+        /* Full-screen Mobile Menu styling is now handled inline */
 
         /* Fade-in animation */
         @keyframes fadeIn {
