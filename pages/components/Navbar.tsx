@@ -4,15 +4,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '../context/AuthContext';
 import { signOut } from 'aws-amplify/auth';
-import {
-  Flex,
-  Button,
-  View,
-  Link as AmplifyLink,
-} from '@aws-amplify/ui-react';
+import { Flex, Button, View, Link as AmplifyLink } from '@aws-amplify/ui-react';
 import { Menu, X } from 'lucide-react';
 import * as THREE from 'three';
 import '@aws-amplify/ui-react/styles.css';
+import useViewportHeight from '../hooks/useViewportHeight'; // <-- import the custom hook
 
 const NAVBAR_HEIGHT = 80;
 const CORNER_RADIUS = 8;
@@ -26,6 +22,8 @@ interface BubbleState {
 }
 
 const Navbar = () => {
+  useViewportHeight(); // This sets the --vh variable on mount/resize
+
   const router = useRouter();
   const { isAuthenticated, isAdmin, checkAuth } = useAuth();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -68,7 +66,16 @@ const Navbar = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Three.js animation for desktop
+  // Lock/unlock body scroll when menu opens/closes
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.classList.add('no-scroll');
+    } else {
+      document.body.classList.remove('no-scroll');
+    }
+  }, [isMobileMenuOpen]);
+
+  // Three.js for desktop
   useEffect(() => {
     if (!containerRef.current || !canvasRef.current || isMobile) return;
 
@@ -84,22 +91,32 @@ const Navbar = () => {
     const renderer = new THREE.WebGLRenderer({
       canvas: canvasRef.current,
       alpha: true,
-      antialias: true
+      antialias: true,
     });
 
     renderer.setSize(window.innerWidth, NAVBAR_HEIGHT);
     camera.position.z = 100;
 
-    // Create a rounded rectangle
     const roundedRectShape = new THREE.Shape();
     const width = 100;
     const height = NAVBAR_HEIGHT;
 
+    // Create a rounded rectangle
     roundedRectShape.moveTo(-width / 2, -height / 2);
     roundedRectShape.lineTo(-width / 2, height / 2 - CORNER_RADIUS);
-    roundedRectShape.quadraticCurveTo(-width / 2, height / 2, -width / 2 + CORNER_RADIUS, height / 2);
+    roundedRectShape.quadraticCurveTo(
+      -width / 2,
+      height / 2,
+      -width / 2 + CORNER_RADIUS,
+      height / 2
+    );
     roundedRectShape.lineTo(width / 2 - CORNER_RADIUS, height / 2);
-    roundedRectShape.quadraticCurveTo(width / 2, height / 2, width / 2, height / 2 - CORNER_RADIUS);
+    roundedRectShape.quadraticCurveTo(
+      width / 2,
+      height / 2,
+      width / 2,
+      height / 2 - CORNER_RADIUS
+    );
     roundedRectShape.lineTo(width / 2, -height / 2);
     roundedRectShape.lineTo(-width / 2, -height / 2);
 
@@ -180,7 +197,9 @@ const Navbar = () => {
           const containerRect = containerRef.current.getBoundingClientRect();
 
           const x =
-            rect.left - containerRect.left + rect.width / 2 - containerRect.width / 2;
+            rect.left - containerRect.left +
+            rect.width / 2 -
+            containerRect.width / 2;
           bubbleState.mesh.position.set(x, 0, 0);
 
           // Horizontal scale
@@ -397,7 +416,7 @@ const Navbar = () => {
                   <X size={24} color="white" />
                 </button>
 
-                {/* Use a separate container to push content down slightly */}
+                {/* Pushed content down slightly below close button */}
                 <div className="mobile-menu-content">
                   <Flex
                     direction="column"
@@ -452,6 +471,23 @@ const Navbar = () => {
       </Flex>
 
       <style jsx global>{`
+        /* Basic reset for padding/margin might help on mobile */
+        html,
+        body {
+          margin: 0;
+          padding: 0;
+        }
+
+        /* The custom property that approximates the mobile viewport height */
+        :root {
+          --vh: 100%;
+        }
+
+        /* Prevent body scroll when .no-scroll is added */
+        body.no-scroll {
+          overflow: hidden;
+        }
+
         /* Nav Link Styles */
         .nav-link {
           font-weight: 500;
@@ -497,12 +533,14 @@ const Navbar = () => {
           top: 0;
           left: 0;
           width: 100vw;
-          height: 100vh;
+          /* Replace 100vh with a calc using our custom var: */
+          height: calc(var(--vh, 1vh) * 100);
           background: #0a1930;
-          z-index: 60;
+          z-index: 9999;
           animation: fadeIn 0.3s ease-out;
           display: flex;
           flex-direction: column;
+          overflow-y: auto; /* allow scrolling if content is tall */
         }
 
         /* Close button in top-right corner */
@@ -515,9 +553,8 @@ const Navbar = () => {
           cursor: pointer;
         }
 
-        /* Additional container to push nav items below the close button */
         .mobile-menu-content {
-          margin-top: 4rem; /* Adjust this to space content further down */
+          margin-top: 4rem; /* Adjust to push content below X button */
         }
 
         /* Fade-in animation */
