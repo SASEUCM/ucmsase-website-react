@@ -352,8 +352,11 @@ const Navbar = () => {
         width: '100%',
         height: `${NAVBAR_HEIGHT}px`,
         background: '#0a1930',
-        position: 'relative',
+        position: 'fixed',
         overflow: 'hidden',
+        zIndex: 999,
+        top: 0,
+        left: 0,
       }}
     >
       {/* Only render Three.js canvas on desktop */}
@@ -377,7 +380,7 @@ const Navbar = () => {
         height="100%"
         justifyContent="space-between"
         alignItems="center"
-        style={{ position: 'relative', zIndex: 1 }}
+        style={{ position: 'relative', zIndex: 1000 }}
       >
         {/* Logo */}
         <Link href="/about" passHref legacyBehavior>
