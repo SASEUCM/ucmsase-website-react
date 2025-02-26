@@ -1,4 +1,3 @@
-// pages/eboard.tsx
 import React from 'react';
 import { View } from '@aws-amplify/ui-react';
 import EBoard from './components/EBoard';
@@ -7,11 +6,19 @@ const EBoardPage: React.FC = () => {
   return (
     <View
       as="main"
-      borderRadius="medium" 
-      opacity={1}
-      backgroundColor="#f5f5f5"
-      minHeight="100vh"
-      padding="2rem"
+      style={{
+        minHeight: '100vh',
+        padding: '2rem',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        position: 'relative',
+        fontFamily: "'Montserrat', sans-serif",
+        textAlign: 'center',
+        width: '100%',
+      }}
+      className="eboard-page"
     >
       {/* Background image with blur */}
       <View
@@ -26,7 +33,7 @@ const EBoardPage: React.FC = () => {
           backgroundPosition: 'center',
           filter: 'blur(8px) brightness(0.7)',
           zIndex: -1,
-          transform: 'scale(1.1)' // Prevents blur edges from showing
+          transform: 'scale(1.1)',
         }}
       />
       <EBoard />

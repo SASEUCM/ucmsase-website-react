@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { 
   Card, 
@@ -8,24 +8,65 @@ import {
   Text,
   Alert,
   TextField,
-  View
+  View,
+  SelectField,
+  ToggleButton,
+  ToggleButtonGroup
 } from '@aws-amplify/ui-react';
+import { QRCodeSVG } from 'qrcode.react';
+
+// Get the base URL - in development vs production
+const getBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    return window.location.origin;
+  }
+  // Fallback for server-side rendering
+  return process.env.NEXT_PUBLIC_BASE_URL || 'https://yourdomain.com';
+};
 
 const QRScanner = () => {
   const [scanning, setScanning] = useState(false);
   const [pointsToAdd, setPointsToAdd] = useState(1);
   const [status, setStatus] = useState<{ type: 'success' | 'error' | null, message: string }>({ type: null, message: '' });
   const [loading, setLoading] = useState(false);
+  const [activeMode, setActiveMode] = useState<'scan' | 'generate'>('scan');
+  const [eventType, setEventType] = useState<string>('general');
+  const [eventTitle, setEventTitle] = useState<string>('SASE Meeting');
+  const [generatedQR, setGeneratedQR] = useState<string>('');
+  const [useUrlRedirect, setUseUrlRedirect] = useState<boolean>(true);
+  
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
   const processingRef = useRef(false);  // Track if we're currently processing a scan
 
-  useEffect(() => {
-    return () => {
-      if (scannerRef.current) {
-        scannerRef.current.clear();
-      }
+  const generateEventQR = () => {
+    // Create a QR code for an event
+    const eventData = {
+      type: 'sase-event',
+      eventType,
+      title: eventTitle,
+      points: pointsToAdd,
+      timestamp: new Date().toISOString()
     };
-  }, []);
+    
+    // Convert to a QR code string
+    const rawData = `SASE-EVENT:${btoa(JSON.stringify(eventData))}`;
+    
+    let qrData;
+    if (useUrlRedirect) {
+      // Create a URL that points to your website with the encoded data
+      const baseUrl = getBaseUrl();
+      qrData = `${baseUrl}/scan?code=${encodeURIComponent(rawData)}`;
+    } else {
+      qrData = rawData;
+    }
+    
+    setGeneratedQR(qrData);
+    
+    setStatus({
+      type: 'success',
+      message: `QR code generated! Members can scan this to earn ${pointsToAdd} points.`
+    });
+  };
 
   const startScanning = () => {
     scannerRef.current = new Html5QrcodeScanner(
@@ -112,10 +153,21 @@ const QRScanner = () => {
     });
   };
 
+  const downloadQRCode = () => {
+    const canvas = document.querySelector("#qr-canvas canvas") as HTMLCanvasElement;
+    if (!canvas) return;
+    
+    // Create a temporary link element
+    const link = document.createElement('a');
+    link.download = `${eventType}-${eventTitle.replace(/\s+/g, '-').toLowerCase()}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  };
+
   return (
     <Card padding="2rem">
-      <Flex direction="column" gap="1rem">
-        <Heading level={3}>Scan QR Code</Heading>
+      <Flex direction="column" gap="1.5rem">
+        <Heading level={3}>Admin QR Code Tools</Heading>
 
         {status.type && (
           <Alert variation={status.type} isDismissible={true}>
@@ -123,33 +175,146 @@ const QRScanner = () => {
           </Alert>
         )}
 
-        <TextField
-          label="Points to Add"
-          type="number"
-          value={pointsToAdd.toString()}
-          onChange={e => setPointsToAdd(Number(e.target.value))}
-          min={1}
-          step={1}
-          isDisabled={loading || scanning}
-        />
+        <Flex justifyContent="center" marginBottom="1rem">
+          <ToggleButtonGroup
+            value={activeMode}
+            isExclusive
+            onChange={(value) => setActiveMode(value as 'scan' | 'generate')}
+            size="large"
+          >
+            <ToggleButton value="scan">Scan QR Codes</ToggleButton>
+            <ToggleButton value="generate">Generate Event QR</ToggleButton>
+          </ToggleButtonGroup>
+        </Flex>
 
-        <View id="qr-reader" width="100%" maxWidth="500px" margin="0 auto" />
+        {activeMode === 'scan' && (
+          <View>
+            <Flex direction="column" gap="1rem">
+              <TextField
+                label="Points to Add"
+                type="number"
+                value={pointsToAdd.toString()}
+                onChange={e => setPointsToAdd(Number(e.target.value))}
+                min={1}
+                step={1}
+                isDisabled={loading || scanning}
+              />
 
-        <Button
-          onClick={scanning ? stopScanning : startScanning}
-          isLoading={loading}
-          loadingText="Processing..."
-          variation="primary"
-          className="blue-button"
-          isDisabled={loading}
-        >
-          {scanning ? 'Stop Scanning' : 'Start Camera'}
-        </Button>
+              <View id="qr-reader" width="100%" maxWidth="500px" margin="0 auto" />
 
-        {scanning && !loading && (
-          <Text fontSize="small" textAlign="center">
-            Position the QR code within the camera view
-          </Text>
+              <Button
+                onClick={scanning ? stopScanning : startScanning}
+                isLoading={loading}
+                loadingText="Processing..."
+                variation="primary"
+                className="blue-button"
+                isDisabled={loading}
+              >
+                {scanning ? 'Stop Scanning' : 'Start Camera'}
+              </Button>
+
+              {scanning && !loading && (
+                <Text fontSize="small" textAlign="center">
+                  Position the QR code within the camera view
+                </Text>
+              )}
+            </Flex>
+          </View>
+        )}
+        
+        {activeMode === 'generate' && (
+          <View>
+            <Flex direction="column" gap="1rem">
+              <SelectField
+                label="Event Type"
+                value={eventType}
+                onChange={e => setEventType(e.target.value)}
+              >
+                <option value="general">General Meeting</option>
+                <option value="workshop">Workshop</option>
+                <option value="social">Social Event</option>
+                <option value="conference">Conference</option>
+                <option value="volunteering">Volunteering</option>
+              </SelectField>
+              
+              <TextField
+                label="Event Title"
+                value={eventTitle}
+                onChange={e => setEventTitle(e.target.value)}
+                placeholder="Enter event title"
+                required
+              />
+              
+              <TextField
+                label="Points Value"
+                type="number"
+                value={pointsToAdd.toString()}
+                onChange={e => setPointsToAdd(Number(e.target.value))}
+                min={1}
+                step={1}
+              />
+              
+              <View backgroundColor="#f5f5f5" padding="1rem" borderRadius="medium">
+                <Button
+                  onClick={() => setUseUrlRedirect(!useUrlRedirect)}
+                  variation={useUrlRedirect ? "primary" : "link"}
+                  marginBottom="0.5rem"
+                >
+                  {useUrlRedirect ? "✓ URL Redirect Enabled" : "URL Redirect Disabled"}
+                </Button>
+                <Text fontSize="small">
+                  {useUrlRedirect 
+                    ? "QR code will contain a URL that opens your website. Can be scanned with any camera app." 
+                    : "QR code will contain raw data. Must be scanned from within the app."}
+                </Text>
+              </View>
+              
+              <Button
+                onClick={generateEventQR}
+                variation="primary"
+                className="blue-button"
+              >
+                Generate QR Code
+              </Button>
+              
+              {generatedQR && (
+                <Flex direction="column" alignItems="center" gap="1rem" margin="1.5rem 0" id="qr-canvas">
+                  <View padding="1.5rem" backgroundColor="white" borderRadius="medium">
+                    <QRCodeSVG 
+                      value={generatedQR}
+                      size={256}
+                      level="H"
+                      includeMargin={true}
+                    />
+                  </View>
+                  <Text textAlign="center">
+                    Display this QR code at your event for members to scan
+                  </Text>
+                  <Text fontSize="small" color="gray">
+                    Worth {pointsToAdd} points for &quot;{eventTitle}&quot;
+                  </Text>
+                  
+                  <Button
+                    onClick={downloadQRCode}
+                    variation="link"
+                    size="small"
+                    marginTop="1rem"
+                  >
+                    Download QR Code
+                  </Button>
+                  
+                  {useUrlRedirect && (
+                    <View backgroundColor="#f5f5f5" padding="0.75rem" borderRadius="medium" margin="0.5rem 0" maxWidth="100%">
+                      <Text fontSize="small" fontWeight="bold">QR Code URL:</Text>
+                      <Text fontSize="small" style={{ wordBreak: 'break-all', overflowWrap: 'break-word' }}>
+                        {generatedQR}
+                      </Text>
+                    </View>
+                  )}
+                </Flex>
+              )}
+            </Flex>
+          </View>
         )}
       </Flex>
     </Card>

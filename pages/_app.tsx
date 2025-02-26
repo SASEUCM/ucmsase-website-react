@@ -10,8 +10,12 @@ import { Authenticator } from '@aws-amplify/ui-react';
 import Navbar from "./components/Navbar";
 import { useRouter } from 'next/router';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { formFields, components } from './config/auth-config';
+import '@fontsource/montserrat/400.css';
+import '@fontsource/roboto/400.css'
+import '@fontsource/roboto/700.css'
+import LoadingScreen from './components/LoadingScreen';
 
 export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
   getLayout?: (page: ReactElement) => ReactNode
@@ -46,9 +50,24 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
 function AppContent({ Component, pageProps }: AppPropsWithLayout) {
   const router = useRouter();
   const { isAuthenticated, checkAuth } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
   
   const publicRoutes = ['/', '/about', '/events', '/gallery', '/contact', '/sponsors', '/eboard'];
   const isPublicRoute = publicRoutes.includes(router.pathname);
+
+  useEffect(() => {
+    // Initial loading delay for the 3D model
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 3000); // Adjust time as needed
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // If still loading, show the loading screen
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
 
   // If route is public or user is authenticated, load the page
   if (isPublicRoute || isAuthenticated) {

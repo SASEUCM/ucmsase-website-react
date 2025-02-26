@@ -1,32 +1,236 @@
-// components/Navbar.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '../context/AuthContext';
 import { signOut } from 'aws-amplify/auth';
-import { disableBodyScroll, enableBodyScroll } from 'body-scroll-lock';
 import {
   Flex,
   Button,
   View,
   Link as AmplifyLink,
-  Divider,
 } from '@aws-amplify/ui-react';
+import { Menu, X } from 'lucide-react';
+import * as THREE from 'three';
 import '@aws-amplify/ui-react/styles.css';
 
-export default function Navbar() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+const NAVBAR_HEIGHT = 80;
+const CORNER_RADIUS = 8;
+const MOBILE_BREAKPOINT = 768;
+
+interface BubbleState {
+  mesh: THREE.Mesh;
+  element: HTMLElement | null;
+  active: boolean;
+  color: THREE.Color;
+}
+
+const Navbar = () => {
   const router = useRouter();
   const { isAuthenticated, isAdmin, checkAuth } = useAuth();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animationRef = useRef<number>();
+  const bubblesRef = useRef<Map<string, BubbleState>>(new Map());
+  const linksRef = useRef<Map<string, HTMLElement>>(new Map());
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  const navLinks = [
+    { id: 'about', label: 'About Us', path: '/about' },
+    { id: 'events', label: 'Events', path: '/events' },
+    { id: 'gallery', label: 'Gallery', path: '/gallery' },
+    { id: 'profile', label: 'My Profile', path: '/profile' },
+    { id: 'schedule', label: 'Schedule', path: '/schedule' },
+    { id: 'contact', label: 'Contact', path: '/contact' },
+    { id: 'eboard', label: 'E-Board', path: '/eboard' }
+  ];
+
+  const adminNavLinks = [ // Admin-specific navigation
+    { id: 'dashboard', label: 'Dashboard', path: '/admin/dashboard' },
+    { id: 'users', label: 'Users', path: '/admin/users' },
+    { id: 'events', label: 'Events', path: '/admin/events' },
+    { id: 'content', label: 'Content', path: '/admin/content' },
+    { id: 'scan', label: 'Scan QR', path: '/admin/scan' },
+    { id: 'schedule', label: 'Schedule', path: '/schedule' },
+    { id: 'subscribers', label: 'Subscribers', path: '/admin/subscribers' },
+    { id: 'settings', label: 'Settings', path: '/admin/settings' },
+  ];
+
+
+  // Check if we're on mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
-    if (isMobileMenuOpen) {
-      disableBodyScroll(document.body);
-    } else {
-      enableBodyScroll(document.body);
+    if (!containerRef.current || !canvasRef.current || isMobile) return;
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.OrthographicCamera(
+      window.innerWidth / -2,
+      window.innerWidth / 2,
+      NAVBAR_HEIGHT / 2,
+      -NAVBAR_HEIGHT / 2,
+      1,
+      1000
+    );
+    const renderer = new THREE.WebGLRenderer({
+      canvas: canvasRef.current,
+      alpha: true,
+      antialias: true
+    });
+
+    renderer.setSize(window.innerWidth, NAVBAR_HEIGHT);
+    camera.position.z = 100;
+
+    // Create rounded rectangle
+    const roundedRectShape = new THREE.Shape();
+    const width = 100;
+    const height = NAVBAR_HEIGHT;
+
+    roundedRectShape.moveTo(-width / 2, -height / 2);
+    roundedRectShape.lineTo(-width / 2, height / 2 - CORNER_RADIUS);
+    roundedRectShape.quadraticCurveTo(-width / 2, height / 2, -width / 2 + CORNER_RADIUS, height / 2);
+    roundedRectShape.lineTo(width / 2 - CORNER_RADIUS, height / 2);
+    roundedRectShape.quadraticCurveTo(width / 2, height / 2, width / 2, height / 2 - CORNER_RADIUS);
+    roundedRectShape.lineTo(width / 2, -height / 2);
+    roundedRectShape.lineTo(-width / 2, -height / 2);
+
+    const geometry = new THREE.ShapeGeometry(roundedRectShape);
+
+    // Determine which links to use
+    const linksToUse = router.pathname.startsWith('/admin') && isAdmin ? adminNavLinks : navLinks;
+
+    linksToUse.forEach(link => {
+      const material = new THREE.MeshBasicMaterial({
+        color: '#1a54c4',
+        transparent: true,
+        opacity: 0.15,
+        side: THREE.DoubleSide
+      });
+
+      const bubble = new THREE.Mesh(geometry, material);
+      bubble.scale.set(1, 0, 1);
+      scene.add(bubble);
+
+      bubblesRef.current.set(link.id, {
+        mesh: bubble,
+        element: null,
+        active: false,
+        color: new THREE.Color('#1a54c4')
+      });
+    });
+
+
+    // Admin Links Bubbles - NEW SECTION
+    const adminLinks = [
+      { id: 'admin-panel', label: 'Admin Panel', path: '/admin', condition: isAdmin && !router.pathname.startsWith('/admin') },
+      { id: 'view-site', label: 'View Site', path: '/', condition: isAdmin && router.pathname.startsWith('/admin') }
+    ];
+
+    adminLinks.forEach(link => {
+      if (link.condition) { // Only create bubble if condition is true
+        const material = new THREE.MeshBasicMaterial({
+          color: '#1a54c4',
+          transparent: true,
+          opacity: 0.15,
+          side: THREE.DoubleSide
+        });
+
+        const bubble = new THREE.Mesh(geometry, material);
+        bubble.scale.set(1, 0, 1);
+        scene.add(bubble);
+
+        bubblesRef.current.set(link.id, {
+          mesh: bubble,
+          element: null,
+          active: false,
+          color: new THREE.Color('#1a54c4')
+        });
+      }
+    });
+    // END NEW SECTION
+
+    const animate = () => {
+      animationRef.current = requestAnimationFrame(animate);
+
+      bubblesRef.current.forEach((bubbleState, linkId) => {
+        const element = linksRef.current.get(linkId);
+        if (element && containerRef.current) {
+          const rect = element.getBoundingClientRect();
+          const containerRect = containerRef.current.getBoundingClientRect();
+
+          const x = rect.left - containerRect.left + rect.width / 2 - containerRect.width / 2;
+          bubbleState.mesh.position.set(x, 0, 0);
+
+          bubbleState.mesh.scale.x = rect.width / 100;
+
+          const targetScaleY = bubbleState.active ? 1 : 0;
+          bubbleState.mesh.scale.y = THREE.MathUtils.lerp(
+            bubbleState.mesh.scale.y,
+            targetScaleY,
+            0.2
+          );
+
+          const targetColor = bubbleState.active ? new THREE.Color('#ffffff') : new THREE.Color('#1a54c4');
+          bubbleState.color.lerp(targetColor, 0.2);
+          (bubbleState.mesh.material as THREE.MeshBasicMaterial).color = bubbleState.color;
+
+          (bubbleState.mesh.material as THREE.MeshBasicMaterial).opacity =
+            bubbleState.active ? 1 : 0.15;
+        }
+      });
+
+      renderer.render(scene, camera);
+    };
+
+    animate();
+
+    const handleResize = () => {
+      const width = window.innerWidth;
+      camera.left = width / -2;
+      camera.right = width / 2;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, NAVBAR_HEIGHT);
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+      renderer.dispose();
+      geometry.dispose();
+      bubblesRef.current.forEach(bubble => {
+        (bubble.mesh.material as THREE.MeshBasicMaterial).dispose();
+      });
+    };
+  }, [isMobile, isAdmin, router.pathname]);
+
+  const handleLinkHover = (linkId: string, hovering: boolean) => {
+    if (isMobile) return;
+    const bubbleState = bubblesRef.current.get(linkId);
+    if (bubbleState) {
+      bubbleState.active = hovering;
+
+      const element = linksRef.current.get(linkId);
+      if (element) {
+        if (hovering) {
+          element.classList.add('nav-link-hover');
+        } else {
+          element.classList.remove('nav-link-hover');
+        }
+      }
     }
-  }, [isMobileMenuOpen]);
+  };
 
   const handleSignOut = async () => {
     try {
@@ -39,85 +243,62 @@ export default function Navbar() {
     }
   };
 
-  const isAdminPage = router.pathname.startsWith('/admin');
+  const handleMobileLinkClick = () => {
+    setIsMobileMenuOpen(false);
+  };
 
-  useEffect(() => {
-    const handleRouteChange = () => setIsMobileMenuOpen(false);
-    router.events.on('routeChangeComplete', handleRouteChange);
-    return () => router.events.off('routeChangeComplete', handleRouteChange);
-  }, [router.events]);
-
-  const renderLinks = (isMobile = false) => {
-    const linkStyle = isMobile ? { 
-      padding: '0.5rem 0', // Reduced from 1rem to 0.5rem
-      display: 'block',
-      fontSize: '1rem' // Reduced from 1.2rem to 1rem
-    } : {};
-    
-    const commonProps = {
-      style: linkStyle,
-      onClick: () => isMobile && setIsMobileMenuOpen(false)
-    };
-
-    if (isAdminPage && isAdmin) {
-      return (
-        <>
-          <Link href="/admin/dashboard" passHref legacyBehavior>
-            <AmplifyLink {...commonProps}>Dashboard</AmplifyLink>
-          </Link>
-          <Link href="/admin/users" passHref legacyBehavior>
-            <AmplifyLink {...commonProps}>Users</AmplifyLink>
-          </Link>
-          <Link href="/admin/events" passHref legacyBehavior>
-            <AmplifyLink {...commonProps}>Events</AmplifyLink>
-          </Link>
-          <Link href="/admin/content" passHref legacyBehavior>
-            <AmplifyLink {...commonProps}>Content</AmplifyLink>
-          </Link>
-          <Link href="/admin/scan" passHref legacyBehavior>
-            <AmplifyLink {...commonProps}>Scan QR</AmplifyLink>
-          </Link>
-          <Link href="/schedule" passHref legacyBehavior>
-            <AmplifyLink {...commonProps}>Schedule</AmplifyLink>
-          </Link>
-          <Link href="/admin/subscribers" passHref legacyBehavior>
-            <AmplifyLink {...commonProps}>Subscribers</AmplifyLink>
-          </Link>
-          <Link href="/admin/settings" passHref legacyBehavior>
-            <AmplifyLink {...commonProps}>Settings</AmplifyLink>
-          </Link>
-        </>
-      );
-    }
+  const renderLinks = () => {
+    // Choose links based on route and admin status
+    const linksToRender = router.pathname.startsWith('/admin') && isAdmin ? adminNavLinks : navLinks;
 
     return (
       <>
-        <Link href="/about" passHref legacyBehavior>
-          <AmplifyLink {...commonProps}>About Us</AmplifyLink>
-        </Link>
-        <Link href="/events" passHref legacyBehavior>
-          <AmplifyLink {...commonProps}>Events</AmplifyLink>
-        </Link>
-        <Link href="/gallery" passHref legacyBehavior>
-          <AmplifyLink {...commonProps}>Gallery</AmplifyLink>
-        </Link>
-        <Link href="/profile" passHref legacyBehavior>
-          <AmplifyLink {...commonProps}>My Profile</AmplifyLink>
-        </Link>
-        <Link href="/schedule" passHref legacyBehavior>
-          <AmplifyLink {...commonProps}>Schedule</AmplifyLink>
-        </Link>
-        <Link href="/contact" passHref legacyBehavior>
-          <AmplifyLink {...commonProps}>Contact</AmplifyLink>
-        </Link>
-        {/*}
-        <Link href="/sponsors" passHref legacyBehavior>
-          <AmplifyLink {...commonProps}>Sponsors</AmplifyLink>
-        </Link>
-        */}
-        <Link href="/eboard" passHref legacyBehavior>
-          <AmplifyLink {...commonProps}>E-Board</AmplifyLink>
-        </Link>
+        {linksToRender.map(({ id, label, path }) => (
+          <Link key={id} href={path} passHref legacyBehavior>
+            <AmplifyLink
+              className="nav-link"
+              ref={(el) => {
+                if (el) linksRef.current.set(id, el);
+              }}
+              onMouseEnter={() => handleLinkHover(id, true)}
+              onMouseLeave={() => handleLinkHover(id, false)}
+              onClick={handleMobileLinkClick}
+            >
+              {label}
+            </AmplifyLink>
+          </Link>
+        ))}
+          {/* Admin Panel Link - Desktop Version */}
+          {isAdmin && !router.pathname.startsWith('/admin') && (
+            <Link href="/admin" passHref legacyBehavior>
+              <AmplifyLink
+                className="nav-link"
+                ref={(el) => {
+                  if (el) linksRef.current.set('admin-panel', el);
+                }}
+                onMouseEnter={() => handleLinkHover('admin-panel', true)}
+                onMouseLeave={() => handleLinkHover('admin-panel', false)}
+              >
+                Admin Panel
+              </AmplifyLink>
+            </Link>
+          )}
+
+          {/* View Site Link - Desktop Version */}
+          {isAdmin && router.pathname.startsWith('/admin') && (
+            <Link href="/" passHref legacyBehavior>
+              <AmplifyLink
+                className="nav-link"
+                ref={(el) => {
+                  if (el) linksRef.current.set('view-site', el);
+                }}
+                onMouseEnter={() => handleLinkHover('view-site', true)}
+                onMouseLeave={() => handleLinkHover('view-site', false)}
+              >
+                View Site
+              </AmplifyLink>
+            </Link>
+          )}
       </>
     );
   };
@@ -125,180 +306,213 @@ export default function Navbar() {
   return (
     <View
       as="header"
-      backgroundColor="white"
-      borderStyle="solid"
-      borderWidth="0 0 1px 0"
-      borderColor="#ddd"
-      width="100%"
-      position="relative"
-      style={{ zIndex: 50 }}
+      ref={containerRef}
+      style={{
+        width: '100%',
+        height: `${NAVBAR_HEIGHT}px`,
+        background: '#0a1930',
+        position: 'relative',
+        overflow: 'hidden'
+      }}
     >
+      {!isMobile && (
+        <canvas
+          ref={canvasRef}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            pointerEvents: 'none'
+          }}
+        />
+      )}
+
       <Flex
         margin="0 auto"
         width="90%"
+        height="100%"
         justifyContent="space-between"
         alignItems="center"
-        padding="1rem 0"
+        style={{ position: 'relative', zIndex: 1 }}
       >
-        {/* Logo */}
         <Link href="/about" passHref legacyBehavior>
-          <AmplifyLink>
-            <div style={{ position: 'relative', height: '40px', width: 'auto' }}>
-              <Image
-                src="/logo.png"
-                alt="SASE UC Merced Logo"
-                height={40}
-                width={40}
-                style={{ 
-                  objectFit: 'contain',
-                  width: 'auto',
-                  height: '100%'
-                }}
-              />
-            </div>
+          <AmplifyLink style={{ display: 'flex', alignItems: 'center' }}>
+            <Image
+              src="/logo.png"
+              alt="SASE UC Merced Logo"
+              width={48}
+              height={48}
+              style={{ objectFit: 'contain' }}
+            />
           </AmplifyLink>
         </Link>
 
-        {/* Desktop Navigation */}
-        <View display={{ base: 'none', medium: 'flex' }} as="nav">
-          <Flex direction="row" gap="3rem">
-            {renderLinks()}
-          </Flex>
-        </View>
-
-        {/* Mobile Menu Button */}
-        <Button
-          display={{ medium: 'none' }}
-          onClick={() => setIsMobileMenuOpen(true)}
-          variation="link"
-          size="large"
-        >
-          ☰
-        </Button>
-
-        {/* Desktop Auth Section */}
-        <Flex alignItems="center" gap="1rem" display={{ base: 'none', medium: 'flex' }}>
-          {isAuthenticated ? (
-            <>
-              {isAdmin && !isAdminPage && (
-                <Link href="/admin" passHref legacyBehavior>
-                  <AmplifyLink style={{ fontWeight: 'bold' }}>Admin Panel</AmplifyLink>
-                </Link>
-              )}
-              {isAdminPage && (
-                <Link href="/" passHref legacyBehavior>
-                  <AmplifyLink style={{ fontWeight: 'bold' }}>View Site</AmplifyLink>
-                </Link>
-              )}
-              <Button onClick={handleSignOut} variation="primary">
-                Sign Out
-              </Button>
-            </>
-          ) : (
-            <Button onClick={() => router.push('/login')} variation="primary">
-              Log In
-            </Button>
-          )}
-        </Flex>
-
-        {/* Mobile Menu Overlay */}
-        {isMobileMenuOpen && (
+        {isMobile ? (
           <>
-            <View
-              position="fixed"
-              top="0"
-              left="0"
-              right="0"
-              bottom="0"
-              backgroundColor="rgba(0, 0, 0, 0.5)"
-              style={{ zIndex: 100 }}
-              onClick={() => setIsMobileMenuOpen(false)}
-            />
-
-            <View
-              position="fixed"
-              top="0"
-              left="0"
-              right="0"
-              bottom="0"
-              backgroundColor="white"
-              padding="1rem" // Reduced from 2rem to 1rem
-              style={{ 
-                zIndex: 101,
-                overflowY: 'auto',
-                transform: 'translateZ(0)'
-              }}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="mobile-menu-button"
             >
-              <Flex justifyContent="space-between" marginBottom="1rem"> {/* Reduced from 2rem to 1rem */}
-                <div style={{ width: '40px' }} />
-                <Button
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  variation="link"
-                  size="large"
-                >
-                  ✕
-                </Button>
-              </Flex>
+              {isMobileMenuOpen ? (
+                <X size={24} color="white" />
+              ) : (
+                <Menu size={24} color="white" />
+              )}
+            </button>
 
-              <Flex direction="column" gap="0.5rem"> {/* Reduced from 1rem to 0.5rem */}
-                {renderLinks(true)}
+            {isMobileMenuOpen && (
+              <div className="mobile-menu">
+                <Flex direction="column" gap="1rem">
+                  {renderLinks()}
 
-                <Divider margin="1rem 0" /> {/* Reduced from 2rem to 1rem */}
+                  {/* Admin Panel Link - Mobile Version */}
+                  {isAdmin && !router.pathname.startsWith('/admin') && (
+                    <Link href="/admin" passHref legacyBehavior>
+                      <AmplifyLink
+                        className="nav-link"
+                        onClick={handleMobileLinkClick}
+                      >
+                        Admin Panel
+                      </AmplifyLink>
+                    </Link>
+                  )}
 
-                {isAuthenticated ? (
-                  <>
-                    {isAdmin && !isAdminPage && (
-                      <Link href="/admin" passHref legacyBehavior>
-                        <AmplifyLink 
-                          style={{ 
-                            fontWeight: 'bold', 
-                            padding: '0.5rem 0', // Reduced padding
-                            fontSize: '1rem' // Reduced font size
-                          }}
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          Admin Panel
-                        </AmplifyLink>
-                      </Link>
-                    )}
-                    {isAdminPage && (
-                      <Link href="/" passHref legacyBehavior>
-                        <AmplifyLink 
-                          style={{ 
-                            fontWeight: 'bold', 
-                            padding: '0.5rem 0', // Reduced padding
-                            fontSize: '1rem' // Reduced font size
-                          }}
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          View Site
-                        </AmplifyLink>
-                      </Link>
-                    )}
-                    <Button 
-                      onClick={handleSignOut} 
-                      variation="primary"
-                      size="small" // Changed from large to small
-                      style={{ marginTop: '1rem' }} // Reduced from 2rem to 1rem
+                  {/* View Site Link - Mobile Version */}
+                  {isAdmin && router.pathname.startsWith('/admin') && (
+                    <Link href="/" passHref legacyBehavior>
+                      <AmplifyLink
+                        className="nav-link"
+                        onClick={handleMobileLinkClick}
+                      >
+                        View Site
+                      </AmplifyLink>
+                    </Link>
+                  )}
+
+                  {isAuthenticated ? (
+                    <Button
+                      onClick={handleSignOut}
+                      className="auth-button"
                     >
                       Sign Out
                     </Button>
-                  </>
-                ) : (
-                  <Button 
-                    onClick={() => router.push('/login')} 
-                    variation="primary"
-                    size="small" // Changed from large to small
-                    style={{ marginTop: '1rem' }} // Reduced from 2rem to 1rem
-                  >
-                    Log In
-                  </Button>
-                )}
-              </Flex>
-            </View>
+                  ) : (
+                    <Button
+                      onClick={() => {
+                        router.push('/login');
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="auth-button"
+                    >
+                      Log In
+                    </Button>
+                  )}
+                </Flex>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <Flex as="nav" gap="2rem">
+              {renderLinks()}
+            </Flex>
+
+            <Flex gap="1rem">
+              {isAuthenticated ? (
+                <Button
+                  onClick={handleSignOut}
+                  className="auth-button"
+                >
+                  Sign Out
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => router.push('/login')}
+                  className="auth-button"
+                >
+                  Log In
+                </Button>
+              )}
+            </Flex>
           </>
         )}
       </Flex>
+
+      <style jsx global>{`
+        .nav-link {
+          font-weight: 500;
+          padding: 0.75rem 1.25rem;
+          position: relative;
+          transition: all 0.3s ease;
+          font-size: 1rem;
+          color: #ffffff;
+        }
+
+        .nav-link-hover {
+          color: #000000 !important;
+        }
+
+        .auth-button {
+          background: transparent !important;
+          border: 2px solid #1a54c4 !important;
+          color: #ffffff !important;
+          border-radius: 20px !important;
+          padding: 0.5rem 1.5rem !important;
+          transition: all 0.3s ease !important;
+        }
+
+        .auth-button:hover {
+          background: #1a54c4 !important;
+          transform: translateY(-2px);
+        }
+
+        .mobile-menu-button {
+          background: none;
+          border: none;
+          padding: 0.5rem;
+          cursor: pointer;
+          z-index: 50;
+        }
+
+        .mobile-menu {
+          position: fixed;
+          top: ${NAVBAR_HEIGHT}px;
+          left: 0;
+          right: 0;
+          background: #0a1930;
+          padding: 1rem;
+          animation: slideDown 0.3s ease-out;
+          z-index: 40;
+        }
+
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @media (max-width: ${MOBILE_BREAKPOINT}px) {
+          .nav-link {
+            width: 100%;
+            text-align: center;
+            padding: 1rem;
+          }
+
+          .auth-button {
+            width: 100%;
+            margin-top: 1rem;
+          }
+        }
+      `}</style>
     </View>
   );
-}
+};
+
+export default Navbar;

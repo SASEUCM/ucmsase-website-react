@@ -2,12 +2,14 @@
 import { View } from '@aws-amplify/ui-react';
 import Gallery from './components/Gallery';
 
-export default function GalleryPage() {
+// pages/gallery.tsx
+import SimplifiedGallery from './components/SimplifiedGallery';
+
+export default function GalleryPage(): JSX.Element {
   return (
     <View
       as="main"
-      borderRadius="medium"
-      backgroundColor="#f5f5f5"
+      backgroundColor="rgba(245, 245, 245, 0.7)"
       minHeight="100vh"
       padding="2rem"
     >
@@ -27,7 +29,7 @@ export default function GalleryPage() {
           transform: 'scale(1.1)' // Prevents blur edges from showing
         }}
       />
-      <Gallery />
+      <SimplifiedGallery />
     </View>
   );
 }
