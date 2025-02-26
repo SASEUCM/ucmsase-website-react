@@ -33,6 +33,7 @@ const Navbar = () => {
   const animationRef = useRef<number>();
   const bubblesRef = useRef<Map<string, BubbleState>>(new Map());
   const linksRef = useRef<Map<string, HTMLElement>>(new Map());
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -46,7 +47,7 @@ const Navbar = () => {
     { id: 'eboard', label: 'E-Board', path: '/eboard' }
   ];
 
-  const adminNavLinks = [ // Admin-specific navigation
+  const adminNavLinks = [
     { id: 'dashboard', label: 'Dashboard', path: '/admin/dashboard' },
     { id: 'users', label: 'Users', path: '/admin/users' },
     { id: 'events', label: 'Events', path: '/admin/events' },
@@ -57,8 +58,7 @@ const Navbar = () => {
     { id: 'settings', label: 'Settings', path: '/admin/settings' },
   ];
 
-
-  // Check if we're on mobile
+  // Detect mobile
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
@@ -68,6 +68,7 @@ const Navbar = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Three.js animation for desktop
   useEffect(() => {
     if (!containerRef.current || !canvasRef.current || isMobile) return;
 
@@ -89,7 +90,7 @@ const Navbar = () => {
     renderer.setSize(window.innerWidth, NAVBAR_HEIGHT);
     camera.position.z = 100;
 
-    // Create rounded rectangle
+    // Create a rounded rectangle
     const roundedRectShape = new THREE.Shape();
     const width = 100;
     const height = NAVBAR_HEIGHT;
@@ -104,15 +105,19 @@ const Navbar = () => {
 
     const geometry = new THREE.ShapeGeometry(roundedRectShape);
 
-    // Determine which links to use
-    const linksToUse = router.pathname.startsWith('/admin') && isAdmin ? adminNavLinks : navLinks;
+    // Decide which links to display
+    const linksToUse =
+      router.pathname.startsWith('/admin') && isAdmin
+        ? adminNavLinks
+        : navLinks;
 
-    linksToUse.forEach(link => {
+    // Create bubble for each link
+    linksToUse.forEach((link) => {
       const material = new THREE.MeshBasicMaterial({
         color: '#1a54c4',
         transparent: true,
         opacity: 0.15,
-        side: THREE.DoubleSide
+        side: THREE.DoubleSide,
       });
 
       const bubble = new THREE.Mesh(geometry, material);
@@ -123,24 +128,32 @@ const Navbar = () => {
         mesh: bubble,
         element: null,
         active: false,
-        color: new THREE.Color('#1a54c4')
+        color: new THREE.Color('#1a54c4'),
       });
     });
 
-
-    // Admin Links Bubbles - NEW SECTION
-    const adminLinks = [
-      { id: 'admin-panel', label: 'Admin Panel', path: '/admin', condition: isAdmin && !router.pathname.startsWith('/admin') },
-      { id: 'view-site', label: 'View Site', path: '/', condition: isAdmin && router.pathname.startsWith('/admin') }
+    // Extra toggles for "Admin Panel" or "View Site"
+    const adminToggleLinks = [
+      {
+        id: 'admin-panel',
+        label: 'Admin Panel',
+        path: '/admin',
+        condition: isAdmin && !router.pathname.startsWith('/admin'),
+      },
+      {
+        id: 'view-site',
+        label: 'View Site',
+        path: '/',
+        condition: isAdmin && router.pathname.startsWith('/admin'),
+      },
     ];
-
-    adminLinks.forEach(link => {
-      if (link.condition) { // Only create bubble if condition is true
+    adminToggleLinks.forEach((link) => {
+      if (link.condition) {
         const material = new THREE.MeshBasicMaterial({
           color: '#1a54c4',
           transparent: true,
           opacity: 0.15,
-          side: THREE.DoubleSide
+          side: THREE.DoubleSide,
         });
 
         const bubble = new THREE.Mesh(geometry, material);
@@ -151,12 +164,12 @@ const Navbar = () => {
           mesh: bubble,
           element: null,
           active: false,
-          color: new THREE.Color('#1a54c4')
+          color: new THREE.Color('#1a54c4'),
         });
       }
     });
-    // END NEW SECTION
 
+    // Animate the bubbles
     const animate = () => {
       animationRef.current = requestAnimationFrame(animate);
 
@@ -166,11 +179,14 @@ const Navbar = () => {
           const rect = element.getBoundingClientRect();
           const containerRect = containerRef.current.getBoundingClientRect();
 
-          const x = rect.left - containerRect.left + rect.width / 2 - containerRect.width / 2;
+          const x =
+            rect.left - containerRect.left + rect.width / 2 - containerRect.width / 2;
           bubbleState.mesh.position.set(x, 0, 0);
 
+          // Horizontal scale
           bubbleState.mesh.scale.x = rect.width / 100;
 
+          // Vertical scale
           const targetScaleY = bubbleState.active ? 1 : 0;
           bubbleState.mesh.scale.y = THREE.MathUtils.lerp(
             bubbleState.mesh.scale.y,
@@ -178,10 +194,15 @@ const Navbar = () => {
             0.2
           );
 
-          const targetColor = bubbleState.active ? new THREE.Color('#ffffff') : new THREE.Color('#1a54c4');
+          // Color transition
+          const targetColor = bubbleState.active
+            ? new THREE.Color('#ffffff')
+            : new THREE.Color('#1a54c4');
           bubbleState.color.lerp(targetColor, 0.2);
-          (bubbleState.mesh.material as THREE.MeshBasicMaterial).color = bubbleState.color;
+          (bubbleState.mesh.material as THREE.MeshBasicMaterial).color =
+            bubbleState.color;
 
+          // Opacity
           (bubbleState.mesh.material as THREE.MeshBasicMaterial).opacity =
             bubbleState.active ? 1 : 0.15;
         }
@@ -192,6 +213,7 @@ const Navbar = () => {
 
     animate();
 
+    // Resize handling
     const handleResize = () => {
       const width = window.innerWidth;
       camera.left = width / -2;
@@ -199,35 +221,30 @@ const Navbar = () => {
       camera.updateProjectionMatrix();
       renderer.setSize(width, NAVBAR_HEIGHT);
     };
-
     window.addEventListener('resize', handleResize);
 
+    // Cleanup
     return () => {
       window.removeEventListener('resize', handleResize);
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
       renderer.dispose();
       geometry.dispose();
-      bubblesRef.current.forEach(bubble => {
+      bubblesRef.current.forEach((bubble) => {
         (bubble.mesh.material as THREE.MeshBasicMaterial).dispose();
       });
     };
   }, [isMobile, isAdmin, router.pathname]);
 
+  // Hover effect on desktop
   const handleLinkHover = (linkId: string, hovering: boolean) => {
-    if (isMobile) return;
+    if (isMobile) return; // No hover on mobile
     const bubbleState = bubblesRef.current.get(linkId);
     if (bubbleState) {
       bubbleState.active = hovering;
-
       const element = linksRef.current.get(linkId);
       if (element) {
-        if (hovering) {
-          element.classList.add('nav-link-hover');
-        } else {
-          element.classList.remove('nav-link-hover');
-        }
+        if (hovering) element.classList.add('nav-link-hover');
+        else element.classList.remove('nav-link-hover');
       }
     }
   };
@@ -247,9 +264,12 @@ const Navbar = () => {
     setIsMobileMenuOpen(false);
   };
 
+  // Which set of links to render
   const renderLinks = () => {
-    // Choose links based on route and admin status
-    const linksToRender = router.pathname.startsWith('/admin') && isAdmin ? adminNavLinks : navLinks;
+    const linksToRender =
+      router.pathname.startsWith('/admin') && isAdmin
+        ? adminNavLinks
+        : navLinks;
 
     return (
       <>
@@ -268,37 +288,39 @@ const Navbar = () => {
             </AmplifyLink>
           </Link>
         ))}
-          {/* Admin Panel Link - Desktop Version */}
-          {isAdmin && !router.pathname.startsWith('/admin') && (
-            <Link href="/admin" passHref legacyBehavior>
-              <AmplifyLink
-                className="nav-link"
-                ref={(el) => {
-                  if (el) linksRef.current.set('admin-panel', el);
-                }}
-                onMouseEnter={() => handleLinkHover('admin-panel', true)}
-                onMouseLeave={() => handleLinkHover('admin-panel', false)}
-              >
-                Admin Panel
-              </AmplifyLink>
-            </Link>
-          )}
 
-          {/* View Site Link - Desktop Version */}
-          {isAdmin && router.pathname.startsWith('/admin') && (
-            <Link href="/" passHref legacyBehavior>
-              <AmplifyLink
-                className="nav-link"
-                ref={(el) => {
-                  if (el) linksRef.current.set('view-site', el);
-                }}
-                onMouseEnter={() => handleLinkHover('view-site', true)}
-                onMouseLeave={() => handleLinkHover('view-site', false)}
-              >
-                View Site
-              </AmplifyLink>
-            </Link>
-          )}
+        {/* Toggle between Admin Panel & View Site for admins */}
+        {isAdmin && !router.pathname.startsWith('/admin') && (
+          <Link href="/admin" passHref legacyBehavior>
+            <AmplifyLink
+              className="nav-link"
+              ref={(el) => {
+                if (el) linksRef.current.set('admin-panel', el);
+              }}
+              onMouseEnter={() => handleLinkHover('admin-panel', true)}
+              onMouseLeave={() => handleLinkHover('admin-panel', false)}
+              onClick={handleMobileLinkClick}
+            >
+              Admin Panel
+            </AmplifyLink>
+          </Link>
+        )}
+
+        {isAdmin && router.pathname.startsWith('/admin') && (
+          <Link href="/" passHref legacyBehavior>
+            <AmplifyLink
+              className="nav-link"
+              ref={(el) => {
+                if (el) linksRef.current.set('view-site', el);
+              }}
+              onMouseEnter={() => handleLinkHover('view-site', true)}
+              onMouseLeave={() => handleLinkHover('view-site', false)}
+              onClick={handleMobileLinkClick}
+            >
+              View Site
+            </AmplifyLink>
+          </Link>
+        )}
       </>
     );
   };
@@ -312,9 +334,10 @@ const Navbar = () => {
         height: `${NAVBAR_HEIGHT}px`,
         background: '#0a1930',
         position: 'relative',
-        overflow: 'hidden'
+        overflow: 'hidden',
       }}
     >
+      {/* Only render Three.js canvas on desktop */}
       {!isMobile && (
         <canvas
           ref={canvasRef}
@@ -324,7 +347,7 @@ const Navbar = () => {
             left: 0,
             width: '100%',
             height: '100%',
-            pointerEvents: 'none'
+            pointerEvents: 'none',
           }}
         />
       )}
@@ -337,6 +360,7 @@ const Navbar = () => {
         alignItems="center"
         style={{ position: 'relative', zIndex: 1 }}
       >
+        {/* Logo */}
         <Link href="/about" passHref legacyBehavior>
           <AmplifyLink style={{ display: 'flex', alignItems: 'center' }}>
             <Image
@@ -349,6 +373,7 @@ const Navbar = () => {
           </AmplifyLink>
         </Link>
 
+        {/* Mobile vs. Desktop */}
         {isMobile ? (
           <>
             <button
@@ -362,58 +387,47 @@ const Navbar = () => {
               )}
             </button>
 
+            {/* Full-screen mobile menu */}
             {isMobileMenuOpen && (
               <div className="mobile-menu">
-                <Flex direction="column" gap="1rem">
-                  {renderLinks()}
+                <button
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="close-button"
+                >
+                  <X size={24} color="white" />
+                </button>
 
-                  {/* Admin Panel Link - Mobile Version */}
-                  {isAdmin && !router.pathname.startsWith('/admin') && (
-                    <Link href="/admin" passHref legacyBehavior>
-                      <AmplifyLink
-                        className="nav-link"
-                        onClick={handleMobileLinkClick}
+                {/* Use a separate container to push content down slightly */}
+                <div className="mobile-menu-content">
+                  <Flex
+                    direction="column"
+                    alignItems="center"
+                    justifyContent="center"
+                    gap="1rem"
+                  >
+                    {renderLinks()}
+                    {isAuthenticated ? (
+                      <Button onClick={handleSignOut} className="auth-button">
+                        Sign Out
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={() => {
+                          router.push('/login');
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className="auth-button"
                       >
-                        Admin Panel
-                      </AmplifyLink>
-                    </Link>
-                  )}
-
-                  {/* View Site Link - Mobile Version */}
-                  {isAdmin && router.pathname.startsWith('/admin') && (
-                    <Link href="/" passHref legacyBehavior>
-                      <AmplifyLink
-                        className="nav-link"
-                        onClick={handleMobileLinkClick}
-                      >
-                        View Site
-                      </AmplifyLink>
-                    </Link>
-                  )}
-
-                  {isAuthenticated ? (
-                    <Button
-                      onClick={handleSignOut}
-                      className="auth-button"
-                    >
-                      Sign Out
-                    </Button>
-                  ) : (
-                    <Button
-                      onClick={() => {
-                        router.push('/login');
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className="auth-button"
-                    >
-                      Log In
-                    </Button>
-                  )}
-                </Flex>
+                        Log In
+                      </Button>
+                    )}
+                  </Flex>
+                </div>
               </div>
             )}
           </>
         ) : (
+          // Desktop nav
           <>
             <Flex as="nav" gap="2rem">
               {renderLinks()}
@@ -421,10 +435,7 @@ const Navbar = () => {
 
             <Flex gap="1rem">
               {isAuthenticated ? (
-                <Button
-                  onClick={handleSignOut}
-                  className="auth-button"
-                >
+                <Button onClick={handleSignOut} className="auth-button">
                   Sign Out
                 </Button>
               ) : (
@@ -441,6 +452,7 @@ const Navbar = () => {
       </Flex>
 
       <style jsx global>{`
+        /* Nav Link Styles */
         .nav-link {
           font-weight: 500;
           padding: 0.75rem 1.25rem;
@@ -448,12 +460,14 @@ const Navbar = () => {
           transition: all 0.3s ease;
           font-size: 1rem;
           color: #ffffff;
+          text-decoration: none;
         }
 
         .nav-link-hover {
           color: #000000 !important;
         }
 
+        /* Auth Button */
         .auth-button {
           background: transparent !important;
           border: 2px solid #1a54c4 !important;
@@ -468,6 +482,7 @@ const Navbar = () => {
           transform: translateY(-2px);
         }
 
+        /* Mobile Menu Button (Hamburger) */
         .mobile-menu-button {
           background: none;
           border: none;
@@ -476,35 +491,54 @@ const Navbar = () => {
           z-index: 50;
         }
 
+        /* Full-screen Mobile Menu Overlay */
         .mobile-menu {
           position: fixed;
-          top: ${NAVBAR_HEIGHT}px;
+          top: 0;
           left: 0;
-          right: 0;
+          width: 100vw;
+          height: 100vh;
           background: #0a1930;
-          padding: 1rem;
-          animation: slideDown 0.3s ease-out;
-          z-index: 40;
+          z-index: 60;
+          animation: fadeIn 0.3s ease-out;
+          display: flex;
+          flex-direction: column;
         }
 
-        @keyframes slideDown {
+        /* Close button in top-right corner */
+        .close-button {
+          position: absolute;
+          top: 1rem;
+          right: 1rem;
+          background: none;
+          border: none;
+          cursor: pointer;
+        }
+
+        /* Additional container to push nav items below the close button */
+        .mobile-menu-content {
+          margin-top: 4rem; /* Adjust this to space content further down */
+        }
+
+        /* Fade-in animation */
+        @keyframes fadeIn {
           from {
             opacity: 0;
-            transform: translateY(-10px);
           }
           to {
             opacity: 1;
-            transform: translateY(0);
           }
         }
 
         @media (max-width: ${MOBILE_BREAKPOINT}px) {
+          /* Full-width links in mobile menu */
           .nav-link {
             width: 100%;
             text-align: center;
             padding: 1rem;
           }
 
+          /* Auth button full-width in mobile menu */
           .auth-button {
             width: 100%;
             margin-top: 1rem;
