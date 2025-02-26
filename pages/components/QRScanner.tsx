@@ -69,27 +69,56 @@ const QRScanner = () => {
   };
 
   const startScanning = () => {
-    scannerRef.current = new Html5QrcodeScanner(
-      "qr-reader",
-      {
-        fps: 10,
-        qrbox: { width: 250, height: 250 },
-      },
-      false
-    );
-
-    scannerRef.current.render(onScanSuccess, onScanError);
-    setScanning(true);
-    processingRef.current = false;  // Reset processing flag when starting new scan
+    // Reset any previous status messages
+    setStatus({ type: null, message: '' });
+    
+    try {
+      // Check if there's already an active scanner
+      if (scannerRef.current) {
+        stopScanning();
+      }
+      
+      // Create a new scanner instance with proper configuration
+      scannerRef.current = new Html5QrcodeScanner(
+        "qr-reader",
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 },
+          rememberLastUsedCamera: true,
+          showTorchButtonIfSupported: true,
+        },
+        false // Do not immediately render - we want to call render ourselves
+      );
+  
+      // Manually render the scanner with our callbacks
+      scannerRef.current.render(onScanSuccess, onScanError);
+      console.log('Scanner rendered successfully');
+      setScanning(true);
+      processingRef.current = false;  // Reset processing flag when starting new scan
+    } catch (error) {
+      console.error('Error starting scanner:', error);
+      setStatus({
+        type: 'error', 
+        message: error instanceof Error ? error.message : 'Error starting scanner'
+      });
+    }
   };
 
   const stopScanning = () => {
-    if (scannerRef.current) {
-      scannerRef.current.clear();
+    try {
+      if (scannerRef.current) {
+        scannerRef.current.clear();
+        scannerRef.current = null;
+      }
+      setScanning(false);
+      processingRef.current = false;  // Reset processing flag when stopping
+    } catch (error) {
+      console.error('Error stopping scanner:', error);
+      // Still try to reset the state
       scannerRef.current = null;
+      setScanning(false);
+      processingRef.current = false;
     }
-    setScanning(false);
-    processingRef.current = false;  // Reset processing flag when stopping
   };
 
   const onScanSuccess = async (decodedText: string) => {
@@ -105,13 +134,29 @@ const QRScanner = () => {
     
     try {
       console.log('Processing scan:', { barcode: decodedText, pointsToAdd });
+      
+      // Check if we need to extract code from URL format
+      let barcodeToProcess = decodedText;
+      if (decodedText.includes('/scan?code=')) {
+        try {
+          const url = new URL(decodedText);
+          const codeParam = url.searchParams.get('code');
+          if (codeParam) {
+            barcodeToProcess = decodeURIComponent(codeParam);
+          }
+        } catch (error) {
+          console.error('Error parsing URL:', error);
+          // Continue with original barcode if URL parsing fails
+        }
+      }
+      
       const response = await fetch('/api/scan-qr', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          barcode: decodedText,
+          barcode: barcodeToProcess,
           pointsToAdd
         }),
       });
@@ -136,15 +181,16 @@ const QRScanner = () => {
         type: 'error',
         message: error instanceof Error ? error.message : 'Error processing scan'
       });
-      processingRef.current = false;  // Reset processing flag on error
     } finally {
       setLoading(false);
+      processingRef.current = false;  // Reset processing flag when done
     }
   };
 
   const onScanError = (error: string) => {
     // Only show errors that aren't related to waiting for camera permission
-    if (error?.includes('NotFound')) return;
+    // or routine "no QR code found" messages which happen continuously
+    if (error?.includes('NotFound') || error?.includes('No QR code found')) return;
     
     console.error('QR Scan error:', error);
     setStatus({

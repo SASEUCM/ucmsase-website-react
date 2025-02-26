@@ -8,7 +8,7 @@ import { Flex, Button, View, Link as AmplifyLink } from '@aws-amplify/ui-react';
 import { Menu, X } from 'lucide-react';
 import * as THREE from 'three';
 import '@aws-amplify/ui-react/styles.css';
-import useViewportHeight from '../hooks/useViewportHeight'; // <-- import the custom hook
+import useViewportHeight from '../hooks/useViewportHeight';
 
 const NAVBAR_HEIGHT = 80;
 const CORNER_RADIUS = 8;
@@ -284,17 +284,11 @@ const Navbar = () => {
   };
 
   // Which set of links to render
-  const renderLinks = (isMobile = false) => {
+  const renderLinks = () => {
     const linksToRender =
       router.pathname.startsWith('/admin') && isAdmin
         ? adminNavLinks
         : navLinks;
-
-    const linkStyle = isMobile ? { 
-      padding: '0.5rem 0',
-      display: 'block',
-      fontSize: '1rem'
-    } : {};
 
     return (
       <>
@@ -302,7 +296,6 @@ const Navbar = () => {
           <Link key={id} href={path} passHref legacyBehavior>
             <AmplifyLink
               className="nav-link"
-              style={linkStyle}
               ref={(el) => {
                 if (el) linksRef.current.set(id, el);
               }}
@@ -314,6 +307,39 @@ const Navbar = () => {
             </AmplifyLink>
           </Link>
         ))}
+
+        {/* Toggle between Admin Panel & View Site for admins */}
+        {isAdmin && !router.pathname.startsWith('/admin') && (
+          <Link href="/admin" passHref legacyBehavior>
+            <AmplifyLink
+              className="nav-link"
+              ref={(el) => {
+                if (el) linksRef.current.set('admin-panel', el);
+              }}
+              onMouseEnter={() => handleLinkHover('admin-panel', true)}
+              onMouseLeave={() => handleLinkHover('admin-panel', false)}
+              onClick={handleMobileLinkClick}
+            >
+              Admin Panel
+            </AmplifyLink>
+          </Link>
+        )}
+
+        {isAdmin && router.pathname.startsWith('/admin') && (
+          <Link href="/" passHref legacyBehavior>
+            <AmplifyLink
+              className="nav-link"
+              ref={(el) => {
+                if (el) linksRef.current.set('view-site', el);
+              }}
+              onMouseEnter={() => handleLinkHover('view-site', true)}
+              onMouseLeave={() => handleLinkHover('view-site', false)}
+              onClick={handleMobileLinkClick}
+            >
+              View Site
+            </AmplifyLink>
+          </Link>
+        )}
       </>
     );
   };
@@ -327,8 +353,8 @@ const Navbar = () => {
         height: `${NAVBAR_HEIGHT}px`,
         background: '#0a1930',
         position: 'fixed',
-        overflow: 'hidden',
-        zIndex: 100,
+        overflow: 'visible', // Changed from 'hidden' to 'visible' to allow mobile menu to show
+        zIndex: 999,
         top: 0,
         left: 0,
       }}
@@ -354,7 +380,7 @@ const Navbar = () => {
         height="100%"
         justifyContent="space-between"
         alignItems="center"
-        style={{ position: 'relative', zIndex: 1 }}
+        style={{ position: 'relative', zIndex: 1000 }}
       >
         {/* Logo */}
         <Link href="/about" passHref legacyBehavior>
@@ -375,6 +401,7 @@ const Navbar = () => {
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="mobile-menu-button"
+              style={{ display: 'block' }} // Ensure button is visible
             >
               {isMobileMenuOpen ? (
                 <X size={24} color="white" />
@@ -383,111 +410,89 @@ const Navbar = () => {
               )}
             </button>
 
-          {/* Mobile Menu Overlay */}
+            {/* Full-screen mobile menu */}
             {isMobileMenuOpen && (
-              <>
-                {/* Backdrop */}
-                <View
-                  style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                    zIndex: 100,
-                  }}
+              <div 
+                className="mobile-menu"
+                style={{
+                  position: 'fixed',
+                  top: 0,
+                  left: 0,
+                  width: '100vw',
+                  height: 'calc(var(--vh, 1vh) * 100)',
+                  background: '#0a1930',
+                  zIndex: 9999,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  padding: '1rem'
+                }}
+              >
+                <button
                   onClick={() => setIsMobileMenuOpen(false)}
-                />
-
-                {/* Mobile Menu */}
-                <View
+                  className="close-button"
                   style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: '#0a1930',
-                    padding: '1rem',
-                    zIndex: 101,
-                    overflowY: 'auto',
-                    transform: 'translateZ(0)'
+                    position: 'absolute',
+                    top: '1rem',
+                    right: '1rem',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer'
                   }}
                 >
-                  {/* Menu Header */}
-                  <Flex justifyContent="space-between" marginBottom="1rem">
-                    <div style={{ width: '40px' }} />
-                    <Button
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      variation="link"
-                      size="large"
-                    >
-                      ✕
-                    </Button>
-                  </Flex>
+                  <X size={24} color="white" />
+                </button>
 
-                  {/* Menu Content */}
-                  <Flex direction="column" gap="0.5rem">
-                    {renderLinks(true)}
-
-                    <hr style={{ margin: '1rem 0', border: '0.5px solid #eee' }} />
-
+                {/* Pushed content down slightly below close button */}
+                <div 
+                  className="mobile-menu-content"
+                  style={{
+                    marginTop: '4rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '100%'
+                  }}
+                >
+                  <Flex
+                    direction="column"
+                    alignItems="center"
+                    justifyContent="center"
+                    gap="1rem"
+                    width="100%"
+                  >
+                    {renderLinks()}
                     {isAuthenticated ? (
-                      <>
-                        {isAdmin && !router.pathname.startsWith('/admin') && (
-                          <Link href="/admin" passHref legacyBehavior>
-                            <AmplifyLink 
-                              style={{ 
-                                fontWeight: 'bold', 
-                                padding: '0.5rem 0',
-                                fontSize: '1rem'
-                              }}
-                              onClick={() => setIsMobileMenuOpen(false)}
-                            >
-                              Admin Panel
-                            </AmplifyLink>
-                          </Link>
-                        )}
-                        {isAdmin && router.pathname.startsWith('/admin') && (
-                          <Link href="/" passHref legacyBehavior>
-                            <AmplifyLink 
-                              style={{ 
-                                fontWeight: 'bold', 
-                                padding: '0.5rem 0',
-                                fontSize: '1rem'
-                              }}
-                              onClick={() => setIsMobileMenuOpen(false)}
-                            >
-                              View Site
-                            </AmplifyLink>
-                          </Link>
-                        )}
-                        <Button 
-                          onClick={handleSignOut} 
-                          variation="primary"
-                          size="small"
-                          style={{ marginTop: '1rem' }}
-                        >
-                          Sign Out
-                        </Button>
-                      </>
-                    ) : (
                       <Button 
+                        onClick={handleSignOut} 
+                        className="auth-button"
+                        style={{
+                          width: '100%',
+                          maxWidth: '300px',
+                          margin: '1rem 0'
+                        }}
+                      >
+                        Sign Out
+                      </Button>
+                    ) : (
+                      <Button
                         onClick={() => {
                           router.push('/login');
                           setIsMobileMenuOpen(false);
-                        }} 
-                        variation="primary"
-                        size="small"
-                        style={{ marginTop: '1rem' }}
+                        }}
+                        className="auth-button"
+                        style={{
+                          width: '100%',
+                          maxWidth: '300px',
+                          margin: '1rem 0'
+                        }}
                       >
                         Log In
                       </Button>
                     )}
                   </Flex>
-                </View>
-              </>
+                </div>
+              </div>
             )}
           </>
         ) : (
@@ -531,6 +536,8 @@ const Navbar = () => {
         /* Prevent body scroll when .no-scroll is added */
         body.no-scroll {
           overflow: hidden;
+          position: fixed;
+          width: 100%;
         }
 
         /* Nav Link Styles */
@@ -570,9 +577,26 @@ const Navbar = () => {
           padding: 0.5rem;
           cursor: pointer;
           z-index: 50;
+          display: block !important;
         }
 
-        /* Full-screen Mobile Menu styling is now handled inline */
+        /* Mobile Menu Links */
+        @media (max-width: ${MOBILE_BREAKPOINT}px) {
+          .nav-link {
+            width: 100%;
+            text-align: center;
+            padding: 1rem;
+            font-size: 1.2rem;
+            margin: 0.5rem 0;
+            color: white !important;
+          }
+
+          .auth-button {
+            width: 80%;
+            margin: 1rem auto;
+            padding: 0.75rem !important;
+          }
+        }
 
         /* Fade-in animation */
         @keyframes fadeIn {
@@ -584,19 +608,8 @@ const Navbar = () => {
           }
         }
 
-        @media (max-width: ${MOBILE_BREAKPOINT}px) {
-          /* Full-width links in mobile menu */
-          .nav-link {
-            width: 100%;
-            text-align: center;
-            padding: 1rem;
-          }
-
-          /* Auth button full-width in mobile menu */
-          .auth-button {
-            width: 100%;
-            margin-top: 1rem;
-          }
+        .mobile-menu {
+          animation: fadeIn 0.3s ease-out;
         }
       `}</style>
     </View>

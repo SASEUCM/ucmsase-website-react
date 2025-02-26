@@ -140,57 +140,143 @@ const UserQRCode = () => {
   };
 
   const startScanning = () => {
-    scannerRef.current = new Html5Qrcode("qr-reader");
-
-    scannerRef.current.start(
-      { facingMode: "environment" },
-      {
-        fps: 10,
-        qrbox: { width: 250, height: 250 },
-      },
-      onScanSuccess,
-      onScanError
-    );
-    
-    setScanning(true);
-    processingRef.current = false;
+    // Reset any previous errors or statuses
     setStatus({ type: null, message: '' });
+    processingRef.current = false;
+    
+    try {
+      // First make sure we're not already scanning
+      if (scanning) {
+        stopScanning();
+        return;
+      }
+      
+      // Initialize first to ensure the UI updates
+      setScanning(true);
+
+      // Small delay to ensure the DOM element is available after state update
+      setTimeout(() => {
+        try {
+          // Make sure the element exists in the DOM
+          const qrReaderElement = document.getElementById("qr-reader");
+          
+          if (!qrReaderElement) {
+            throw new Error('QR reader container not found in DOM');
+          }
+          
+          // Clean up any existing scanner instance
+          if (scannerRef.current) {
+            stopScanning();
+          }
+          
+          // Create a new scanner instance
+          scannerRef.current = new Html5Qrcode("qr-reader");
+          
+          const qrConfig = {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0,
+          };
+          
+          // Start the scanner with the device camera
+          scannerRef.current.start(
+            { facingMode: "environment" }, // Use the back camera
+            qrConfig,
+            onScanSuccess,
+            onScanError
+          ).then(() => {
+            console.log('Scanner started successfully');
+          }).catch((err) => {
+            console.error('Error starting scanner:', err);
+            setStatus({
+              type: 'error',
+              message: `Failed to start camera: ${err.message || 'Unknown error'}`
+            });
+            setScanning(false);
+            scannerRef.current = null;
+          });
+        } catch (error) {
+          console.error('Error in startScanning:', error);
+          setStatus({
+            type: 'error',
+            message: error instanceof Error ? error.message : 'Failed to initialize scanner'
+          });
+          setScanning(false);
+        }
+      }, 100); // Short delay to allow React to update the DOM
+    } catch (error) {
+      console.error('Error in startScanning setup:', error);
+      setStatus({
+        type: 'error',
+        message: error instanceof Error ? error.message : 'Failed to initialize scanner'
+      });
+      setScanning(false);
+    }
   };
 
   const stopScanning = () => {
-    if (scannerRef.current && scannerRef.current.isScanning) {
-      scannerRef.current.stop().catch(error => {
-        console.error('Error stopping scanner:', error);
-      });
+    try {
+      if (scannerRef.current) {
+        if (scannerRef.current.isScanning) {
+          scannerRef.current.stop()
+            .then(() => {
+              console.log('Scanner stopped successfully');
+            })
+            .catch(error => {
+              console.error('Error stopping scanner:', error);
+            })
+            .finally(() => {
+              scannerRef.current = null;
+              setScanning(false);
+              processingRef.current = false;
+            });
+        } else {
+          scannerRef.current = null;
+          setScanning(false);
+          processingRef.current = false;
+        }
+      } else {
+        setScanning(false);
+        processingRef.current = false;
+      }
+    } catch (error) {
+      console.error('Error in stopScanning:', error);
+      scannerRef.current = null;
+      setScanning(false);
+      processingRef.current = false;
     }
-    scannerRef.current = null;
-    setScanning(false);
-    processingRef.current = false;
   };
 
   const onScanSuccess = async (decodedText: string) => {
+    // Prevent processing multiple scans simultaneously
     if (processingRef.current || scanningLoading) {
       console.log('Already processing a scan, skipping...');
       return;
     }
     
+    console.log('QR code detected:', decodedText);
     processingRef.current = true;
     setScanningLoading(true);
     setStatus({ type: null, message: '' });
     
     try {
-      console.log('QR code scanned:', decodedText);
-      
       let codeData = decodedText;
       
-      // If it's a URL, extract ?code=
+      // If it's a URL, extract the code parameter
       if (decodedText.includes('/scan?code=')) {
-        const url = new URL(decodedText);
-        const codeParam = url.searchParams.get('code');
-        if (codeParam) {
-          codeData = decodeURIComponent(codeParam);
+        try {
+          const url = new URL(decodedText);
+          const codeParam = url.searchParams.get('code');
+          if (codeParam) {
+            codeData = decodeURIComponent(codeParam);
+          }
+        } catch (error) {
+          console.error('Error parsing URL:', error);
+          // Continue with original text if URL parsing fails
         }
       }
+      
+      console.log('Processed code data:', codeData);
       
       // Decide if event or user QR code
       if (codeData.startsWith('SASE-EVENT:')) {
@@ -212,21 +298,25 @@ const UserQRCode = () => {
         type: 'error',
         message: error instanceof Error ? error.message : 'Error processing scan'
       });
-      processingRef.current = false;
     } finally {
       setScanningLoading(false);
+      processingRef.current = false;
     }
   };
 
   const processUserQR = async (scannedBarcode: string) => {
-    // Process points
+    if (!userPoints?.barcode) {
+      throw new Error('Your account is not properly set up. Missing barcode.');
+    }
+    
+    // Process points via API
     const response = await fetch('/api/claim-points', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        userBarcode: userPoints?.barcode,
+        userBarcode: userPoints.barcode,
         scannedBarcode,
       }),
     });
@@ -243,13 +333,18 @@ const UserQRCode = () => {
   };
 
   const processEventQR = async (eventQRCode: string) => {
+    if (!userPoints?.barcode) {
+      throw new Error('Your account is not properly set up. Missing barcode.');
+    }
+    
+    // Process event QR code via API
     const response = await fetch('/api/process-event', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        userBarcode: userPoints?.barcode,
+        userBarcode: userPoints.barcode,
         eventData: eventQRCode,
       }),
     });
@@ -266,14 +361,18 @@ const UserQRCode = () => {
   };
 
   const onScanError = (error: string) => {
-    // Ignore camera permission or "NotFound" spam
+    // Ignore camera permission or "NotFound" spam in console
     if (error?.includes('NotFound')) return;
 
     console.error('QR Scan error:', error);
-    setStatus({
-      type: 'error',
-      message: 'Error scanning QR code: ' + error
-    });
+    
+    // Only show user-facing errors for significant issues, not routine scanning errors
+    if (!error.includes('No QR code found')) {
+      setStatus({
+        type: 'error',
+        message: 'Error scanning QR code: ' + error
+      });
+    }
   };
   
   const downloadQRCode = () => {
@@ -369,7 +468,15 @@ const UserQRCode = () => {
           </Flex>
         ) : (
           <Flex direction="column" alignItems="center" gap="1rem" width="100%">
-            <View id="qr-reader" width="100%" maxWidth="500px" margin="0 auto" />
+            {/* Notice we create an explicit div with the id "qr-reader" */}
+            <div 
+              id="qr-reader" 
+              style={{
+                width: '100%',
+                maxWidth: '500px',
+                margin: '0 auto'
+              }}
+            ></div>
             
             <Button
               onClick={stopScanning}

@@ -90,6 +90,62 @@ a {
   background-color: #153F94 !important;
 }
 
+/* Mobile Navigation Styles */
+@media (max-width: 768px) {
+  .mobile-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    height: calc(var(--vh, 1vh) * 100);
+    background-color: #0a1930;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .mobile-menu-button {
+    display: block !important;
+    visibility: visible !important;
+    z-index: 1001;
+  }
+
+  .mobile-menu-content {
+    margin-top: 4rem;
+    padding: 1rem;
+    width: 100%;
+  }
+
+  .nav-link {
+    width: 100%;
+    text-align: center;
+    padding: 1rem !important;
+    font-size: 1.2rem !important;
+    margin: 0.5rem 0 !important;
+    color: white !important;
+    display: block;
+  }
+
+  .auth-button {
+    width: 100%;
+    max-width: 300px;
+    margin: 1rem auto !important;
+    padding: 0.75rem !important;
+    display: block;
+  }
+
+  /* Fix for Amplify components in mobile menu */
+  .amplify-link.nav-link {
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: 1rem;
+    margin: 0.5rem 0;
+  }
+}
+
 /* Gallery specific styles */
 .gallery-container {
   width: 100%;

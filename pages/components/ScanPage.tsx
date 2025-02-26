@@ -39,11 +39,28 @@ const ScanPage = () => {
     try {
       setProcessing(true);
       
+      // Extract code from URL if needed
+      let processedCodeData = codeData;
+      if (codeData.startsWith('http') && codeData.includes('/scan?code=')) {
+        try {
+          const url = new URL(codeData);
+          const codeParam = url.searchParams.get('code');
+          if (codeParam) {
+            processedCodeData = decodeURIComponent(codeParam);
+          }
+        } catch (error) {
+          console.error('Error parsing URL in code data:', error);
+          // Continue with original string if parsing fails
+        }
+      }
+      
+      console.log('Processing code data:', processedCodeData);
+      
       // Determine the type of QR code
-      if (codeData.startsWith('SASE-EVENT:')) {
-        await processEventQR(codeData, userBarcode);
-      } else if (codeData.startsWith('SASE-')) {
-        await processUserQR(codeData, userBarcode);
+      if (processedCodeData.startsWith('SASE-EVENT:')) {
+        await processEventQR(processedCodeData, userBarcode);
+      } else if (processedCodeData.startsWith('SASE-')) {
+        await processUserQR(processedCodeData, userBarcode);
       } else {
         throw new Error('Invalid QR code format. Not a SASE QR code.');
       }
@@ -86,11 +103,12 @@ const ScanPage = () => {
         // First get the user's points record
         setLoading(true);
         
-        // Fix: Check if userEmail is null before querying
+        // Check if userEmail is null before querying
         if (!userEmail) {
           throw new Error('User email not found. Please log in again.');
         }
         
+        console.log('Fetching user points for', userEmail);
         const response = await client.models.UserPoints.list({
           filter: { userId: { eq: userEmail } }
         });
@@ -105,6 +123,7 @@ const ScanPage = () => {
         )[0];
 
         setUserPoints(userRecord);
+        console.log('Found user record with barcode:', userRecord.barcode);
         
         // Now process the scan
         await processScan(code, userRecord.barcode);
@@ -123,6 +142,8 @@ const ScanPage = () => {
   }, [isAuthenticated, router.isReady, router.query, userEmail, processScan]);
 
   const processUserQR = async (scannedBarcode: string, userBarcode: string) => {
+    console.log('Processing user QR code');
+    
     if (scannedBarcode === userBarcode) {
       throw new Error('You cannot scan your own QR code');
     }
@@ -152,6 +173,8 @@ const ScanPage = () => {
   };
 
   const processEventQR = async (eventQRCode: string, userBarcode: string) => {
+    console.log('Processing event QR code');
+    
     // Process event QR code via API
     const response = await fetch('/api/process-event', {
       method: 'POST',
