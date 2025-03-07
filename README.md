@@ -1,7 +1,5 @@
 ## UC Merced SASE Connect Website
 
-## Yessir
-
 ## Local development
 
 # in order to install and run locally
