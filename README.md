@@ -4,7 +4,7 @@
 
 # in order to install and run locally
 ```npm install```
-```npm run dev```
+```npm run de```
 
 ## Production development
 
