@@ -21,3 +21,5 @@
 ## Features
 
 - **Authentication**: Amazon Cognito for secure user authentication.
+- **API**: Ready-to-use GraphQL endpoint with AWS AppSync.
+- **Database**: Real-time database powered by Amazon DynamoDB.
