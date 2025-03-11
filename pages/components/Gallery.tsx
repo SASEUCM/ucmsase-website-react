@@ -12,6 +12,10 @@ const GALLERY_ITEMS: GalleryItem[] = [
   { id: '2', imageUrl: '/conferencepic.png' },
   { id: '3', imageUrl: '/golfcartpic.png' },
   { id: '4', imageUrl: '/standingonbusiness.png' },
+  { id: '5', imageUrl: '/mydog.png' },
+  { id: '6', imageUrl: '/mydog.png' },
+  { id: '7', imageUrl: '/mydog.png' },
+  // The "mydog.png" are placeholders for future SASE pictures
 ];
 
 export default function SimplifiedGallery(): JSX.Element {
