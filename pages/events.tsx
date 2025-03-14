@@ -6,10 +6,11 @@ export default function EventsPage() {
   return (
     <View
       as="main"
-      borderRadius="medium"
-      backgroundColor="#f5f5f5"
-      minHeight="100vh"
-      padding="2rem"
+      borderRadius="small"
+      backgroundColor="#0a1930"
+      minHeight="20vh"
+      padding="0.5rem"
+      marginTop="11rem" // <-- Adds space to push it a bit lower
     >
       {/* Background image with blur */}
       <View
