@@ -10,7 +10,7 @@ export default function EventsGalleryPage() {
       backgroundColor="#0a1930"
       minHeight="20vh"
       padding="0.5rem"
-      marginTop="11rem"
+      marginTop="6rem" // Reduced space to fix height issue
     >
       {/* Optional Background - same style as other pages */}
       <View
