@@ -35,15 +35,35 @@ const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  const navLinks = [
+  interface SubLink {
+    id: string;
+    label: string;
+    path: string;
+  }
+  
+  interface NavLink {
+    id: string;
+    label: string;
+    path: string;
+    submenu?: SubLink[]; // 👈 Optional submenu property
+  }
+
+  const navLinks: NavLink[] = [
     { id: 'about', label: 'About Us', path: '/about' },
-    { id: 'events', label: 'Events', path: '/events' },
-    { id: 'gallery', label: 'Gallery', path: '/gallery' },
+    {
+      id: 'events',
+      label: 'Events',
+      path: '/events',
+      submenu: [
+        { id: 'events-overview', label: 'Events Overview', path: '/events' },
+        { id: 'gallery', label: 'Gallery', path: '/events/gallery' },
+      ],
+    },
     { id: 'profile', label: 'My Profile', path: '/profile' },
     { id: 'schedule', label: 'Schedule', path: '/schedule' },
     { id: 'contact', label: 'Contact', path: '/contact' },
-    { id: 'eboard', label: 'E-Board', path: '/eboard' }
-  ];
+    { id: 'eboard', label: 'E-Board', path: '/eboard' },
+  ];  
 
   const adminNavLinks = [
     { id: 'dashboard', label: 'Dashboard', path: '/admin/dashboard' },
@@ -285,30 +305,67 @@ const Navbar = () => {
 
   // Which set of links to render
   const renderLinks = () => {
-    const linksToRender =
+    const linksToRender: NavLink[] =
       router.pathname.startsWith('/admin') && isAdmin
         ? adminNavLinks
         : navLinks;
-
+  
     return (
       <>
-        {linksToRender.map(({ id, label, path }) => (
-          <Link key={id} href={path} passHref legacyBehavior>
-            <AmplifyLink
-              className="nav-link"
-              ref={(el) => {
-                if (el) linksRef.current.set(id, el);
-              }}
-              onMouseEnter={() => handleLinkHover(id, true)}
-              onMouseLeave={() => handleLinkHover(id, false)}
-              onClick={handleMobileLinkClick}
-            >
-              {label}
-            </AmplifyLink>
-          </Link>
-        ))}
-
-        {/* Toggle between Admin Panel & View Site for admins */}
+        {linksToRender.map((link: NavLink) => {
+          const { id, label, path, submenu } = link;
+  
+          if (submenu && submenu.length > 0) {
+            return (
+              <div key={id} className="relative group">
+                {/* Main Events Link */}
+                <AmplifyLink
+                  className="nav-link"
+                  ref={(el) => {
+                    if (el) linksRef.current.set(id, el);
+                  }}
+                  onMouseEnter={() => handleLinkHover(id, true)}
+                  onMouseLeave={() => handleLinkHover(id, false)}
+                >
+                  {label}
+                </AmplifyLink>
+  
+                {/* Dropdown Submenu */}
+                <div className="absolute hidden group-hover:flex flex-col bg-white text-black mt-2 rounded-md shadow-lg min-w-[10rem] z-50">
+                  {submenu.map((sub: SubLink) => (
+                    <Link key={sub.id} href={sub.path} passHref legacyBehavior>
+                      <AmplifyLink
+                        className="px-4 py-2 hover:bg-gray-100 whitespace-nowrap"
+                        onClick={handleMobileLinkClick}
+                      >
+                        {sub.label}
+                      </AmplifyLink>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            );
+          }
+  
+          // Regular link (no submenu)
+          return (
+            <Link key={id} href={path} passHref legacyBehavior>
+              <AmplifyLink
+                className="nav-link"
+                ref={(el) => {
+                  if (el) linksRef.current.set(id, el);
+                }}
+                onMouseEnter={() => handleLinkHover(id, true)}
+                onMouseLeave={() => handleLinkHover(id, false)}
+                onClick={handleMobileLinkClick}
+              >
+                {label}
+              </AmplifyLink>
+            </Link>
+          );
+        })}
+  
+        {/* Admin Panel / View Site toggles */}
         {isAdmin && !router.pathname.startsWith('/admin') && (
           <Link href="/admin" passHref legacyBehavior>
             <AmplifyLink
@@ -324,7 +381,7 @@ const Navbar = () => {
             </AmplifyLink>
           </Link>
         )}
-
+  
         {isAdmin && router.pathname.startsWith('/admin') && (
           <Link href="/" passHref legacyBehavior>
             <AmplifyLink
@@ -342,7 +399,7 @@ const Navbar = () => {
         )}
       </>
     );
-  };
+  };  
 
   return (
     <View

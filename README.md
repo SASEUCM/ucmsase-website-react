@@ -1,12 +1,10 @@
 ## UC Merced SASE Connect Website
 
-## Yessir
-
 ## Local development
 
 # in order to install and run locally
 ```npm install```
-```npm run dev```
+```npm run de```
 
 ## Production development
 
@@ -19,7 +17,3 @@
 ```git push```
 
 ## Features
-
-- **Authentication**: Amazon Cognito for secure user authentication.
-- **API**: Ready-to-use GraphQL endpoint with AWS AppSync.
-- **Database**: Real-time database powered by Amazon DynamoDB.

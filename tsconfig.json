@@ -1,6 +1,10 @@
 {
   "compilerOptions": {
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -13,9 +17,23 @@
     "jsx": "preserve",
     "incremental": true,
     "paths": {
-      "@/*": ["./*"]
-    }
+      "@/*": [
+        "./*"
+      ]
+    },
+    "target": "ES2017"
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "pages/about.tsx", "pages/components/Navbar.jsx", "pages/components/NavbarAnimation.js", "**/*.jsx"],
-  "exclude": ["node_modules", "amplify"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "pages/about.tsx",
+    "pages/components/Navbar.jsx",
+    "pages/components/NavbarAnimation.js",
+    "**/*.jsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "amplify"
+  ]
 }
