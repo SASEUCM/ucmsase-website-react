@@ -1,43 +1,50 @@
-// components/UpcomingEvents.tsx
-import { View, Heading, Flex, Card, Text } from '@aws-amplify/ui-react';
-
-interface EventItem {
-  date: string;
-  title: string;
-  time?: string;
-}
-
-// Sample data for demonstration
-const EVENTS: EventItem[] = [
-  { date: 'Jan 29', title: 'SBOD Meeting', time: '8pm' },
-  { date: 'Jan 31', title: 'Weekly General', time: '6pm' },
-  { date: 'Feb 1', title: 'Exec Meeting', time: '10am' },
-];
+import { View, Heading, Flex } from '@aws-amplify/ui-react';
 
 export default function UpcomingEvents() {
   return (
-    <View
-      borderRadius="medium"
-      boxShadow="medium"
-      backgroundColor="white"
-      padding="2rem"
-      maxWidth="1200px"
-      margin="0 auto"
+    <Flex
+      justifyContent="center"  // Horizontal center
+      alignItems="center"      // Vertical center
+      height="70vh"           // Full viewport height (optional, for vertical centering)
+      backgroundColor="white" // Light background for contrast (optional)
+      padding="0.05rem"
+      
     >
-      <Heading level={2} marginBlockEnd="1rem">
-        Upcoming Events
-      </Heading>
+      <View
+        borderRadius="medium"
+        boxShadow="medium"
+        backgroundColor="white"
+        
+        maxWidth="900px"
+        width="100%"
+      >
+        <Heading level={2} marginBlockEnd="1rem" textAlign="center">
+          Upcoming Events
+        </Heading>
 
-      <View as="div" overflow="hidden" position="relative" width="100%" height="600px">
-        <iframe
-          src="https://calendar.google.com/calendar/embed?src=ucmerced%40saseconnect.org&ctz=America%2FLos_Angeles"
-          style={{ border: 0 }}
-          width="100%"
-          height="600"
-          frameBorder="0"
-          scrolling="no"
-        />
+        {/* Border container for iframe */}
+        <div
+          style={{
+            borderTop: '5px solid rgb(6, 104, 179)',
+            borderLeft: '5px solid rgb(6, 104, 179)',
+            borderRight: '5px solid rgb(125, 194, 66)',
+            borderBottom: '5px solid rgb(125, 194, 66)',
+            borderRadius: '16px',
+            overflow: 'hidden',
+          }}
+        >
+          <iframe
+            src="https://calendar.google.com/calendar/embed?src=ucmerced%40saseconnect.org&ctz=America%2FLos_Angeles"
+            style={{
+              width: '100%',
+              height: '450px',
+              border: 'none',
+            }}
+            frameBorder="0"
+            scrolling="no"
+          />
+        </div>
       </View>
-    </View>
+    </Flex>
   );
 }
