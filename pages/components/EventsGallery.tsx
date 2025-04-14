@@ -13,7 +13,7 @@ const upcomingEvent = {
 // Past Events (Replace imageUrl values)
 const pastEvents = [
   {
-    title: 'SASE x Intel',
+    title: 'Granite Resume Workshop',
     category: 'Professional Events',
     imageUrl: '/GraniteResume.png',
   },

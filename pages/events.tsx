@@ -10,7 +10,7 @@ export default function EventsPage() {
       backgroundColor="#0a1930"
       minHeight="20vh"
       padding="0.5rem"
-      marginTop="11rem" // <-- Adds space to push it a bit lower
+      marginTop="6rem" // <-- Reduced space to fix height issue
     >
       {/* Background image with blur */}
       <View
