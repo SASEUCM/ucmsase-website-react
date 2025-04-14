@@ -149,8 +149,8 @@ const Navbar = () => {
       });
     });
 
-    // Extra toggles for "Admin Panel" or "View Site"
-    const adminToggleLinks = [
+    // Extra toggles for "Admin Panel", "View Site", "Elections", and "Exec Chairs"
+    const extraLinks = [
       {
         id: 'admin-panel',
         label: 'Admin Panel',
@@ -163,8 +163,20 @@ const Navbar = () => {
         path: '/',
         condition: isAdmin && router.pathname.startsWith('/admin'),
       },
+      {
+        id: 'elections',
+        label: 'Elections',
+        path: '/elections',
+        condition: isAuthenticated,
+      },
+      {
+        id: 'exec-chairs',
+        label: 'Exec Chairs',
+        path: '/ExecChairsAppPage',
+        condition: isAuthenticated,
+      },
     ];
-    adminToggleLinks.forEach((link) => {
+    extraLinks.forEach((link) => {
       if (link.condition) {
         const material = new THREE.MeshBasicMaterial({
           color: '#1a54c4',
@@ -307,6 +319,38 @@ const Navbar = () => {
             </AmplifyLink>
           </Link>
         ))}
+        
+        {/* Elections link only for authenticated users */}
+        {isAuthenticated && (
+          <>
+            <Link href="/elections" passHref legacyBehavior>
+              <AmplifyLink
+                className="nav-link"
+                ref={(el) => {
+                  if (el) linksRef.current.set('elections', el);
+                }}
+                onMouseEnter={() => handleLinkHover('elections', true)}
+                onMouseLeave={() => handleLinkHover('elections', false)}
+                onClick={handleMobileLinkClick}
+              >
+                Elections
+              </AmplifyLink>
+            </Link>
+            <Link href="/ExecChairsAppPage" passHref legacyBehavior>
+              <AmplifyLink
+                className="nav-link"
+                ref={(el) => {
+                  if (el) linksRef.current.set('exec-chairs', el);
+                }}
+                onMouseEnter={() => handleLinkHover('exec-chairs', true)}
+                onMouseLeave={() => handleLinkHover('exec-chairs', false)}
+                onClick={handleMobileLinkClick}
+              >
+                Exec Chairs
+              </AmplifyLink>
+            </Link>
+          </>
+        )}
 
         {/* Toggle between Admin Panel & View Site for admins */}
         {isAdmin && !router.pathname.startsWith('/admin') && (
