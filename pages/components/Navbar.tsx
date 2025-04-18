@@ -35,10 +35,30 @@ const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  const navLinks = useMemo(() => [
+
+  interface SubLink {
+    id: string;
+    label: string;
+    path: string;
+  }
+  
+  interface NavLink {
+    id: string;
+    label: string;
+    path: string;
+    submenu?: SubLink[]; // 👈 Optional submenu property
+  }
+
+  const navLinks: NavLink[] = [
     { id: 'about', label: 'About Us', path: '/about' },
-    { id: 'events', label: 'Events', path: '/events' },
-    { id: 'gallery', label: 'Gallery', path: '/gallery' },
+    {
+      id: 'events',
+      label: 'Events',
+      path: '/events', // Direct link to events page
+      submenu: [
+        { id: 'gallery', label: 'Gallery', path: '/events/gallery' },
+      ],
+    },
     { id: 'profile', label: 'My Profile', path: '/profile' },
     { id: 'schedule', label: 'Schedule', path: '/schedule' },
     { id: 'contact', label: 'Contact', path: '/contact' },
@@ -298,15 +318,45 @@ const Navbar = () => {
 
   // Which set of links to render
   const renderLinks = () => {
-    const linksToRender =
+    const linksToRender: NavLink[] =
       router.pathname.startsWith('/admin') && isAdmin
         ? adminNavLinks
         : navLinks;
-
+  
     return (
       <>
-        {linksToRender.map(({ id, label, path }) => (
-          <Link key={id} href={path} passHref legacyBehavior>
+{linksToRender.map((link: NavLink) => {
+  const { id, label, path, submenu } = link;
+
+  if (submenu && submenu.length > 0) {
+    return (
+      <div key={id} className={`${isMobile ? '' : 'relative group'}`}>
+        {/* Main Events Link - On desktop, this is just a label that shows dropdown on hover */}
+        {/* On mobile, clicking the link toggles the submenu */}
+        {isMobile ? (
+          <Link href={path} passHref legacyBehavior>
+            <AmplifyLink
+              className="nav-link"
+              ref={(el) => {
+                if (el) linksRef.current.set(id, el);
+              }}
+              onClick={(e) => {
+                if (submenu && submenu.length > 0) {
+                  e.preventDefault(); // Only prevent navigation when there are subitems
+                  const submenuEl = document.getElementById(`submenu-${id}`);
+                  if (submenuEl) {
+                    submenuEl.style.display = submenuEl.style.display === 'block' ? 'none' : 'block';
+                  }
+                } else {
+                  handleMobileLinkClick(); // Close menu if no subitems
+                }
+              }}
+            >
+              {label}
+            </AmplifyLink>
+          </Link>
+        ) : (
+          <Link href={path} passHref legacyBehavior>
             <AmplifyLink
               className="nav-link"
               ref={(el) => {
@@ -314,46 +364,100 @@ const Navbar = () => {
               }}
               onMouseEnter={() => handleLinkHover(id, true)}
               onMouseLeave={() => handleLinkHover(id, false)}
-              onClick={handleMobileLinkClick}
             >
               {label}
             </AmplifyLink>
           </Link>
-        ))}
-        
-        {/* Elections link only for authenticated users */}
-        {isAuthenticated && (
-          <>
-            <Link href="/elections" passHref legacyBehavior>
-              <AmplifyLink
-                className="nav-link"
-                ref={(el) => {
-                  if (el) linksRef.current.set('elections', el);
-                }}
-                onMouseEnter={() => handleLinkHover('elections', true)}
-                onMouseLeave={() => handleLinkHover('elections', false)}
-                onClick={handleMobileLinkClick}
-              >
-                Elections
-              </AmplifyLink>
-            </Link>
-            <Link href="/ExecChairsAppPage" passHref legacyBehavior>
-              <AmplifyLink
-                className="nav-link"
-                ref={(el) => {
-                  if (el) linksRef.current.set('exec-chairs', el);
-                }}
-                onMouseEnter={() => handleLinkHover('exec-chairs', true)}
-                onMouseLeave={() => handleLinkHover('exec-chairs', false)}
-                onClick={handleMobileLinkClick}
-              >
-                Exec Chairs
-              </AmplifyLink>
-            </Link>
-          </>
         )}
 
-        {/* Toggle between Admin Panel & View Site for admins */}
+        {/* Dropdown Submenu - Different styling for mobile vs desktop */}
+        {isMobile ? (
+          <div 
+            id={`submenu-${id}`} 
+            className="mobile-submenu" 
+            style={{ display: 'none' }}
+          >
+            {submenu.map((sub: SubLink) => (
+              <Link key={sub.id} href={sub.path} passHref legacyBehavior>
+                <AmplifyLink
+                  className="nav-link"
+                  style={{ fontSize: '0.9rem', padding: '0.75rem' }}
+                  onClick={handleMobileLinkClick}
+                >
+                  {sub.label}
+                </AmplifyLink>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="absolute hidden group-hover:flex flex-col bg-white text-black rounded-md shadow-lg min-w-[10rem] z-50" style={{ display: 'none' }}>
+            {submenu.map((sub: SubLink) => (
+              <Link key={sub.id} href={sub.path} passHref legacyBehavior>
+                <AmplifyLink
+                  className="px-4 py-2 hover:bg-gray-100 whitespace-nowrap"
+                  onClick={handleMobileLinkClick}
+                >
+                  {sub.label}
+                </AmplifyLink>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Regular link (no submenu)
+  return (
+    <Link key={id} href={path} passHref legacyBehavior>
+      <AmplifyLink
+        className="nav-link"
+        ref={(el) => {
+          if (el) linksRef.current.set(id, el);
+        }}
+        onMouseEnter={() => handleLinkHover(id, true)}
+        onMouseLeave={() => handleLinkHover(id, false)}
+        onClick={handleMobileLinkClick}
+      >
+        {label}
+      </AmplifyLink>
+    </Link>
+  );
+})}
+
+{/* Elections link only for authenticated users */}
+{isAuthenticated && (
+  <>
+    <Link href="/elections" passHref legacyBehavior>
+      <AmplifyLink
+        className="nav-link"
+        ref={(el) => {
+          if (el) linksRef.current.set('elections', el);
+        }}
+        onMouseEnter={() => handleLinkHover('elections', true)}
+        onMouseLeave={() => handleLinkHover('elections', false)}
+        onClick={handleMobileLinkClick}
+      >
+        Elections
+      </AmplifyLink>
+    </Link>
+    <Link href="/ExecChairsAppPage" passHref legacyBehavior>
+      <AmplifyLink
+        className="nav-link"
+        ref={(el) => {
+          if (el) linksRef.current.set('exec-chairs', el);
+        }}
+        onMouseEnter={() => handleLinkHover('exec-chairs', true)}
+        onMouseLeave={() => handleLinkHover('exec-chairs', false)}
+        onClick={handleMobileLinkClick}
+      >
+        Exec Chairs
+      </AmplifyLink>
+    </Link>
+  </>
+)}
+
+{/* Admin Panel / View Site toggles */}
         {isAdmin && !router.pathname.startsWith('/admin') && (
           <Link href="/admin" passHref legacyBehavior>
             <AmplifyLink
@@ -369,7 +473,7 @@ const Navbar = () => {
             </AmplifyLink>
           </Link>
         )}
-
+  
         {isAdmin && router.pathname.startsWith('/admin') && (
           <Link href="/" passHref legacyBehavior>
             <AmplifyLink
@@ -387,7 +491,7 @@ const Navbar = () => {
         )}
       </>
     );
-  };
+  };  
 
   return (
     <View
@@ -424,12 +528,12 @@ const Navbar = () => {
         width="90%"
         height="100%"
         justifyContent="space-between"
-        alignItems="center"
+        alignItems="flex-start"
         style={{ position: 'relative', zIndex: 1000 }}
       >
         {/* Logo */}
         <Link href="/about" passHref legacyBehavior>
-          <AmplifyLink style={{ display: 'flex', alignItems: 'center' }}>
+          <AmplifyLink style={{ display: 'flex', alignItems: 'center', marginTop: '16px' }}>
             <Image
               src="/logo.png"
               alt="SASE UC Merced Logo"
@@ -549,13 +653,14 @@ const Navbar = () => {
 
             <Flex gap="1rem">
               {isAuthenticated ? (
-                <Button onClick={handleSignOut} className="auth-button">
+                <Button onClick={handleSignOut} className="auth-button" style={{ marginTop: '20px' }}>
                   Sign Out
                 </Button>
               ) : (
                 <Button
                   onClick={() => router.push('/login')}
                   className="auth-button"
+                  style={{ marginTop: '20px' }}
                 >
                   Log In
                 </Button>
@@ -594,6 +699,10 @@ const Navbar = () => {
           font-size: 1rem;
           color: #ffffff;
           text-decoration: none;
+          display: flex;
+          align-items: center;
+          height: 40px;
+          margin-top: 20px;
         }
 
         .nav-link-hover {

@@ -1,8 +1,8 @@
-// pages/events.tsx
-import UpcomingEvents from './components/UpcomingEvents';
+// pages/events/gallery.tsx
+import EventsGallery from '../components/EventsGallery';
 import { View } from '@aws-amplify/ui-react';
 
-export default function EventsPage() {
+export default function EventsGalleryPage() {
   return (
     <View
       as="main"
@@ -10,9 +10,9 @@ export default function EventsPage() {
       backgroundColor="#0a1930"
       minHeight="20vh"
       padding="0.5rem"
-      marginTop="6rem" // <-- Reduced space to fix height issue
+      marginTop="6rem" // Reduced space to fix height issue
     >
-      {/* Background image with blur */}
+      {/* Optional Background - same style as other pages */}
       <View
         style={{
           position: 'fixed',
@@ -25,10 +25,12 @@ export default function EventsPage() {
           backgroundPosition: 'center',
           filter: 'blur(8px) brightness(0.7)',
           zIndex: -1,
-          transform: 'scale(1.1)' // Prevents blur edges from showing
+          transform: 'scale(1.1)',
         }}
       />
-      <UpcomingEvents />
+
+      {/* Gallery Component */}
+      <EventsGallery />
     </View>
   );
 }
