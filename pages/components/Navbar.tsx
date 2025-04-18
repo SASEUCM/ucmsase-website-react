@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -35,6 +35,7 @@ const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
+
   interface SubLink {
     id: string;
     label: string;
@@ -61,10 +62,10 @@ const Navbar = () => {
     { id: 'profile', label: 'My Profile', path: '/profile' },
     { id: 'schedule', label: 'Schedule', path: '/schedule' },
     { id: 'contact', label: 'Contact', path: '/contact' },
-    { id: 'eboard', label: 'E-Board', path: '/eboard' },
-  ];  
+    { id: 'eboard', label: 'E-Board', path: '/eboard' }
+  ], []);
 
-  const adminNavLinks = [
+  const adminNavLinks = useMemo(() => [
     { id: 'dashboard', label: 'Dashboard', path: '/admin/dashboard' },
     { id: 'users', label: 'Users', path: '/admin/users' },
     { id: 'events', label: 'Events', path: '/admin/events' },
@@ -73,7 +74,7 @@ const Navbar = () => {
     { id: 'schedule', label: 'Schedule', path: '/schedule' },
     { id: 'subscribers', label: 'Subscribers', path: '/admin/subscribers' },
     { id: 'settings', label: 'Settings', path: '/admin/settings' },
-  ];
+  ], []);
 
   // Detect mobile
   useEffect(() => {
@@ -168,8 +169,8 @@ const Navbar = () => {
       });
     });
 
-    // Extra toggles for "Admin Panel" or "View Site"
-    const adminToggleLinks = [
+    // Extra toggles for "Admin Panel", "View Site", "Elections", and "Exec Chairs"
+    const extraLinks = [
       {
         id: 'admin-panel',
         label: 'Admin Panel',
@@ -182,8 +183,20 @@ const Navbar = () => {
         path: '/',
         condition: isAdmin && router.pathname.startsWith('/admin'),
       },
+      {
+        id: 'elections',
+        label: 'Elections',
+        path: '/elections',
+        condition: isAuthenticated,
+      },
+      {
+        id: 'exec-chairs',
+        label: 'Exec Chairs',
+        path: '/ExecChairsAppPage',
+        condition: isAuthenticated,
+      },
     ];
-    adminToggleLinks.forEach((link) => {
+    extraLinks.forEach((link) => {
       if (link.condition) {
         const material = new THREE.MeshBasicMaterial({
           color: '#1a54c4',
@@ -267,11 +280,12 @@ const Navbar = () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
       renderer.dispose();
       geometry.dispose();
-      bubblesRef.current.forEach((bubble) => {
+      const currentBubbles = bubblesRef.current;
+      currentBubbles.forEach((bubble) => {
         (bubble.mesh.material as THREE.MeshBasicMaterial).dispose();
       });
     };
-  }, [isMobile, isAdmin, router.pathname]);
+  }, [isMobile, isAdmin, router.pathname, isAuthenticated, navLinks, adminNavLinks]);
 
   // Hover effect on desktop
   const handleLinkHover = (linkId: string, hovering: boolean) => {
@@ -311,107 +325,139 @@ const Navbar = () => {
   
     return (
       <>
-        {linksToRender.map((link: NavLink) => {
-          const { id, label, path, submenu } = link;
-  
-          if (submenu && submenu.length > 0) {
-            return (
-              <div key={id} className={`${isMobile ? '' : 'relative group'}`}>
-                {/* Main Events Link - On desktop, this is just a label that shows dropdown on hover */}
-                {/* On mobile, clicking the link toggles the submenu */}
-                {isMobile ? (
-                  <Link href={path} passHref legacyBehavior>
-                    <AmplifyLink
-                      className="nav-link"
-                      ref={(el) => {
-                        if (el) linksRef.current.set(id, el);
-                      }}
-                      onClick={(e) => {
-                        if (submenu && submenu.length > 0) {
-                          e.preventDefault(); // Only prevent navigation when there are subitems
-                          const submenuEl = document.getElementById(`submenu-${id}`);
-                          if (submenuEl) {
-                            submenuEl.style.display = submenuEl.style.display === 'block' ? 'none' : 'block';
-                          }
-                        } else {
-                          handleMobileLinkClick(); // Close menu if no subitems
-                        }
-                      }}
-                    >
-                      {label}
-                    </AmplifyLink>
-                  </Link>
-                ) : (
-                  <Link href={path} passHref legacyBehavior>
-                    <AmplifyLink
-                      className="nav-link"
-                      ref={(el) => {
-                        if (el) linksRef.current.set(id, el);
-                      }}
-                      onMouseEnter={() => handleLinkHover(id, true)}
-                      onMouseLeave={() => handleLinkHover(id, false)}
-                    >
-                      {label}
-                    </AmplifyLink>
-                  </Link>
-                )}
-  
-                {/* Dropdown Submenu - Different styling for mobile vs desktop */}
-                {isMobile ? (
-                  <div 
-                    id={`submenu-${id}`} 
-                    className="mobile-submenu" 
-                    style={{ display: 'none' }}
-                  >
-                    {submenu.map((sub: SubLink) => (
-                      <Link key={sub.id} href={sub.path} passHref legacyBehavior>
-                        <AmplifyLink
-                          className="nav-link"
-                          style={{ fontSize: '0.9rem', padding: '0.75rem' }}
-                          onClick={handleMobileLinkClick}
-                        >
-                          {sub.label}
-                        </AmplifyLink>
-                      </Link>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="absolute hidden group-hover:flex flex-col bg-white text-black rounded-md shadow-lg min-w-[10rem] z-50" style={{ display: 'none' }}>
-                    {submenu.map((sub: SubLink) => (
-                      <Link key={sub.id} href={sub.path} passHref legacyBehavior>
-                        <AmplifyLink
-                          className="px-4 py-2 hover:bg-gray-100 whitespace-nowrap"
-                          onClick={handleMobileLinkClick}
-                        >
-                          {sub.label}
-                        </AmplifyLink>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          }
-  
-          // Regular link (no submenu)
-          return (
-            <Link key={id} href={path} passHref legacyBehavior>
-              <AmplifyLink
-                className="nav-link"
-                ref={(el) => {
-                  if (el) linksRef.current.set(id, el);
-                }}
-                onMouseEnter={() => handleLinkHover(id, true)}
-                onMouseLeave={() => handleLinkHover(id, false)}
-                onClick={handleMobileLinkClick}
-              >
-                {label}
-              </AmplifyLink>
-            </Link>
-          );
-        })}
-  
-        {/* Admin Panel / View Site toggles */}
+{linksToRender.map((link: NavLink) => {
+  const { id, label, path, submenu } = link;
+
+  if (submenu && submenu.length > 0) {
+    return (
+      <div key={id} className={`${isMobile ? '' : 'relative group'}`}>
+        {/* Main Events Link - On desktop, this is just a label that shows dropdown on hover */}
+        {/* On mobile, clicking the link toggles the submenu */}
+        {isMobile ? (
+          <Link href={path} passHref legacyBehavior>
+            <AmplifyLink
+              className="nav-link"
+              ref={(el) => {
+                if (el) linksRef.current.set(id, el);
+              }}
+              onClick={(e) => {
+                if (submenu && submenu.length > 0) {
+                  e.preventDefault(); // Only prevent navigation when there are subitems
+                  const submenuEl = document.getElementById(`submenu-${id}`);
+                  if (submenuEl) {
+                    submenuEl.style.display = submenuEl.style.display === 'block' ? 'none' : 'block';
+                  }
+                } else {
+                  handleMobileLinkClick(); // Close menu if no subitems
+                }
+              }}
+            >
+              {label}
+            </AmplifyLink>
+          </Link>
+        ) : (
+          <Link href={path} passHref legacyBehavior>
+            <AmplifyLink
+              className="nav-link"
+              ref={(el) => {
+                if (el) linksRef.current.set(id, el);
+              }}
+              onMouseEnter={() => handleLinkHover(id, true)}
+              onMouseLeave={() => handleLinkHover(id, false)}
+            >
+              {label}
+            </AmplifyLink>
+          </Link>
+        )}
+
+        {/* Dropdown Submenu - Different styling for mobile vs desktop */}
+        {isMobile ? (
+          <div 
+            id={`submenu-${id}`} 
+            className="mobile-submenu" 
+            style={{ display: 'none' }}
+          >
+            {submenu.map((sub: SubLink) => (
+              <Link key={sub.id} href={sub.path} passHref legacyBehavior>
+                <AmplifyLink
+                  className="nav-link"
+                  style={{ fontSize: '0.9rem', padding: '0.75rem' }}
+                  onClick={handleMobileLinkClick}
+                >
+                  {sub.label}
+                </AmplifyLink>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="absolute hidden group-hover:flex flex-col bg-white text-black rounded-md shadow-lg min-w-[10rem] z-50" style={{ display: 'none' }}>
+            {submenu.map((sub: SubLink) => (
+              <Link key={sub.id} href={sub.path} passHref legacyBehavior>
+                <AmplifyLink
+                  className="px-4 py-2 hover:bg-gray-100 whitespace-nowrap"
+                  onClick={handleMobileLinkClick}
+                >
+                  {sub.label}
+                </AmplifyLink>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Regular link (no submenu)
+  return (
+    <Link key={id} href={path} passHref legacyBehavior>
+      <AmplifyLink
+        className="nav-link"
+        ref={(el) => {
+          if (el) linksRef.current.set(id, el);
+        }}
+        onMouseEnter={() => handleLinkHover(id, true)}
+        onMouseLeave={() => handleLinkHover(id, false)}
+        onClick={handleMobileLinkClick}
+      >
+        {label}
+      </AmplifyLink>
+    </Link>
+  );
+})}
+
+{/* Elections link only for authenticated users */}
+{isAuthenticated && (
+  <>
+    <Link href="/elections" passHref legacyBehavior>
+      <AmplifyLink
+        className="nav-link"
+        ref={(el) => {
+          if (el) linksRef.current.set('elections', el);
+        }}
+        onMouseEnter={() => handleLinkHover('elections', true)}
+        onMouseLeave={() => handleLinkHover('elections', false)}
+        onClick={handleMobileLinkClick}
+      >
+        Elections
+      </AmplifyLink>
+    </Link>
+    <Link href="/ExecChairsAppPage" passHref legacyBehavior>
+      <AmplifyLink
+        className="nav-link"
+        ref={(el) => {
+          if (el) linksRef.current.set('exec-chairs', el);
+        }}
+        onMouseEnter={() => handleLinkHover('exec-chairs', true)}
+        onMouseLeave={() => handleLinkHover('exec-chairs', false)}
+        onClick={handleMobileLinkClick}
+      >
+        Exec Chairs
+      </AmplifyLink>
+    </Link>
+  </>
+)}
+
+{/* Admin Panel / View Site toggles */}
         {isAdmin && !router.pathname.startsWith('/admin') && (
           <Link href="/admin" passHref legacyBehavior>
             <AmplifyLink

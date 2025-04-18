@@ -23,6 +23,7 @@
     },
     "target": "ES2017"
   },
+{
   "include": [
     "next-env.d.ts",
     "**/*.ts",
@@ -30,10 +31,12 @@
     "pages/about.tsx",
     "pages/components/Navbar.jsx",
     "pages/components/NavbarAnimation.js",
-    "**/*.jsx"
+    "**/*.jsx",
+    "pages/components/ExecChairsApp.js"
   ],
   "exclude": [
     "node_modules",
     "amplify"
   ]
+}
 }

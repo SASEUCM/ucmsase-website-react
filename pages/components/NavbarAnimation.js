@@ -99,8 +99,9 @@ const NavbarAnimation = () => {
     // Cleanup
     return () => {
       window.removeEventListener('resize', handleResize);
-      if (containerRef.current && renderer.domElement) {
-        containerRef.current.removeChild(renderer.domElement);
+      const currentContainer = containerRef.current;
+      if (currentContainer && renderer.domElement) {
+        currentContainer.removeChild(renderer.domElement);
       }
       particlesGeometry.dispose();
       particlesMaterial.dispose();
