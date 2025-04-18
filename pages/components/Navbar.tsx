@@ -187,13 +187,13 @@ const Navbar = () => {
         id: 'elections',
         label: 'Elections',
         path: '/elections',
-        condition: isAdmin,
+        condition: isAuthenticated,
       },
       {
         id: 'exec-chairs',
         label: 'Exec Chairs',
         path: '/ExecChairsAppPage',
-        condition: isAdmin,
+        condition: isAuthenticated,
       },
     ];
     extraLinks.forEach((link) => {
@@ -425,8 +425,8 @@ const Navbar = () => {
   );
 })}
 
-{/* Elections and Exec Chairs links only for admin users */}
-{isAdmin && (
+{/* Elections and Exec Chairs links for authenticated users */}
+{isAuthenticated && (
   <>
     <Link href="/elections" passHref legacyBehavior>
       <AmplifyLink
