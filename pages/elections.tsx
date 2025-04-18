@@ -84,16 +84,60 @@ export default function ElectionsPage() {
         </Text>
 
         {/* Timeline Section */}
-        <Card variation="elevated" marginBottom="2rem">
-          <Heading level={3}>Election Timeline</Heading>
-          <View as="ul" padding="1rem">
-            <Text as="li" marginBottom="0.5rem">Applications Open: April 15th, 2025</Text>
-            <Text as="li" marginBottom="0.5rem">Applications Close: April 29th, 2025</Text>
-            <Text as="li" marginBottom="0.5rem">Candidate Presentations: May 3rd, 2025</Text>
-            <Text as="li">Election Results: May 10th, 2025</Text>
+        <Card variation="elevated" marginBottom="2rem" backgroundColor="#0a1930" padding="3rem">
+          <Heading level={2} color="white" textAlign="center" marginBottom="3rem">
+            Election Timeline
+          </Heading>
+          <View maxWidth="1000px" margin="0 auto">
+            <Flex direction="row" alignItems="center" justifyContent="space-between">
+              {[
+                { date: 'April 15th, 2025', event: 'Applications Open', icon: '📝' },
+                { date: 'April 29th, 2025', event: 'Applications Close', icon: '🔒' },
+                { date: 'May 3rd, 2025', event: 'Presentations', icon: '🎤' },
+                { date: 'May 10th, 2025', event: 'Results', icon: '🎉' },
+              ].map((item, index, array) => (
+                <View key={index} width="200px" position="relative">
+                  <Flex direction="column" alignItems="center">
+                    <View 
+                      backgroundColor="#1a54c4" 
+                      style={{
+                        width: '60px',
+                        height: '60px',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginBottom: '1rem'
+                      }}
+                    >
+                      <Text fontSize="1.5rem">{item.icon}</Text>
+                    </View>
+                    <Text color="#1a54c4" fontSize="1.1rem" fontWeight="bold" textAlign="center" marginBottom="0.5rem">
+                      {item.event}
+                    </Text>
+                    <Text color="white" fontSize="0.9rem" textAlign="center">
+                      {item.date}
+                    </Text>
+                  </Flex>
+                  {index < array.length - 1 && (
+                    <View
+                      backgroundColor="#1a54c4"
+                      style={{
+                        height: '2px',
+                        position: 'absolute',
+                        top: '30px',
+                        left: '100%',
+                        width: '100px',
+                        transform: 'translateX(-50px)',
+                        opacity: 0.5
+                      }}
+                    />
+                  )}
+                </View>
+              ))}
+            </Flex>
           </View>
         </Card>
-
 
         {/* Positions Section */}
         <Heading level={2} textAlign="center" marginTop="3rem" marginBottom="1rem">
