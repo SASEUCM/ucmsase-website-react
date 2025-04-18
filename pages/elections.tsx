@@ -122,7 +122,7 @@ export default function ElectionsPage() {
                 <Heading level={5} marginTop="1rem">Requirements:</Heading>
                 <Text as="div" 
                   dangerouslySetInnerHTML={{ 
-                    __html: position.requirementsMarkdown.replace(/\n/g, '<br />').replace(/- /g, '• ') 
+                    __html: position.requirementsMarkdown.replace(/\n/g, '<br />').replace(/- /g, '&bull; ') 
                   }} 
                 />
               </Card>
@@ -135,7 +135,7 @@ export default function ElectionsPage() {
           Executive Chair Positions
         </Heading>
         <Text marginBottom="1rem">
-          Executive Chairs lead specific aspects of the organization and work closely with SBOD to implement the organization's vision.
+          Executive Chairs lead specific aspects of the organization and work closely with SBOD to implement the organization&apos;s vision.
         </Text>
         <Flex direction={{ base: 'column', medium: 'row' }} wrap="wrap" gap="1rem">
           {positions
@@ -152,7 +152,7 @@ export default function ElectionsPage() {
                 <Heading level={5} marginTop="1rem">Requirements:</Heading>
                 <Text as="div" 
                   dangerouslySetInnerHTML={{ 
-                    __html: position.requirementsMarkdown.replace(/\n/g, '<br />').replace(/- /g, '• ') 
+                    __html: position.requirementsMarkdown.replace(/\n/g, '<br />').replace(/- /g, '&bull; ') 
                   }} 
                 />
               </Card>
@@ -167,7 +167,7 @@ export default function ElectionsPage() {
         <Card variation="elevated">
           <View>
             <Heading level={4}>How do I apply?</Heading>
-            <Text marginBottom="1rem">Click the "Apply Now" button to fill out our application form.</Text>
+            <Text marginBottom="1rem">Click the &quot;Apply Now&quot; button to fill out our application form.</Text>
             
             <Heading level={4}>What is the time commitment?</Heading>
             <Text marginBottom="1rem">SBOD positions typically require 5-7 hours per week, while Executive Chair positions require 3-5 hours per week.</Text>
@@ -181,7 +181,7 @@ export default function ElectionsPage() {
         </Card>
 
         {/* Apply Button - Again at Bottom */}
-        <Flex justifyContent="center" marginY="2rem">
+        <Flex justifyContent="center" margin="2rem 0">
           <Button
             variation="primary"
             size="large"

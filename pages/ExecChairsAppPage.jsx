@@ -1,37 +1,36 @@
 import { useState, useEffect } from 'react';
-import ExecChairsApp from './components/ExecChairsApp'; // Use your existing component
+import ExecChairProfile from './components/ExecChairProfile';
+import { fetchProfiles } from '../src/services/googleSheetsService';
+import {
+  View,
+  Heading,
+  Text,
+  Grid,
+  SelectField,
+  Flex,
+  Loader,
+  useTheme,
+} from '@aws-amplify/ui-react';
 
 const ExecChairsAppPage = () => {
+  const { tokens } = useTheme();
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filterDepartment, setFilterDepartment] = useState('');
   
-  // Fetch data from Google Apps Script web app when component mounts
+  // Fetch data from Google Sheets API when component mounts
   useEffect(() => {
-    const fetchProfiles = async () => {
+    const getProfiles = async () => {
       try {
         setLoading(true);
         
-        // Google Apps Script deployed web app URL - Replace with your actual URL
-        const appScriptUrl = 'https://script.google.com/macros/s/AKfycbzSLpwNAP-ggXKEprG2mEnCp_DnF56VEwdv24ioD9U1UZ5__7nXbYV8QjDLmWb3EvOK/exec';
+        console.log('Fetching data from Google Sheets API');
+        const profilesData = await fetchProfiles();
         
-        console.log('Fetching data from Google Apps Script');
-        
-        const response = await fetch(appScriptUrl);
-        
-        if (!response.ok) {
-          throw new Error(`Failed to fetch data: ${response.status} ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        
-        if (!data || !data.profiles || data.profiles.length === 0) {
-          throw new Error('No data found in the Google Apps Script response');
-        }
-        
-        console.log('Received profiles:', data.profiles);
-        setProfiles(data.profiles);
+        console.log('Received profiles:', profilesData);
+        setProfiles(profilesData);
+        setError(null);
       } catch (err) {
         console.error('Error fetching profiles:', err);
         setError(`Failed to load executive chairs: ${err.message}`);
@@ -40,77 +39,123 @@ const ExecChairsAppPage = () => {
       }
     };
     
-    fetchProfiles();
+    getProfiles();
   }, []);
 
-  // Get unique departments for the filter dropdown
-  const departments = [...new Set(profiles.map(profile => profile.department))].filter(Boolean);
+  // Get unique majors for the filter dropdown
+  const majors = [...new Set(profiles.map(profile => profile.major))].filter(Boolean);
 
-  // Filter profiles based on selected department
+  // Filter profiles based on selected major
   const filteredProfiles = filterDepartment 
-    ? profiles.filter(profile => profile.department === filterDepartment)
+    ? profiles.filter(profile => profile.major === filterDepartment)
     : profiles;
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <header className="mb-8 text-center">
-        <h1 className="text-3xl font-bold mb-2">Executive Chairs</h1>
-        <p className="text-gray-600 mb-6">
-          Meet our leadership team and department chairs
-        </p>
-        
-        {/* Department filter */}
-        <div className="max-w-md mx-auto">
-          <label htmlFor="department-filter" className="block text-sm font-medium text-gray-700 mb-1">
-            Filter by Department:
-          </label>
-          <div className="relative">
-            <select
-              id="department-filter"
+    <View
+      backgroundColor={tokens.colors.neutral[10].value}
+      padding={tokens.space.large.value}
+      minHeight="100vh"
+    >
+      <View
+        maxWidth="1200px"
+        margin="0 auto"
+        padding={tokens.space.medium.value}
+      >
+        <View textAlign="center" marginBottom={tokens.space.xl.value}>
+          <Heading 
+            level={1} 
+            color="#1A54C4"
+            marginBottom={tokens.space.small.value}
+          >
+            Executive Chairs
+          </Heading>
+          <Text
+            fontSize={tokens.fontSizes.large.value}
+            color={tokens.colors.neutral[80].value}
+            marginBottom={tokens.space.xl.value}
+          >
+            Meet our leadership team and department chairs
+          </Text>
+          
+          {/* Major filter */}
+          <View 
+            maxWidth="400px" 
+            margin="0 auto" 
+            marginBottom={tokens.space.xl.value}
+          >
+            <SelectField
+              label="Filter by Major"
+              labelHidden={false}
               value={filterDepartment}
               onChange={(e) => setFilterDepartment(e.target.value)}
-              className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              fontSize={tokens.fontSizes.medium.value}
             >
-              <option value="">All Departments</option>
-              {departments.map((department) => (
-                <option key={department} value={department}>
-                  {department}
+              <option value="">All Majors</option>
+              {majors.map((major) => (
+                <option key={major} value={major}>
+                  {major}
                 </option>
               ))}
-            </select>
-          </div>
-        </div>
-      </header>
+            </SelectField>
+          </View>
+        </View>
 
-      {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
-        </div>
-      ) : error ? (
-        <div className="text-center text-red-500 p-6 bg-red-50 rounded-lg">
-          <h2 className="text-xl font-bold mb-2">Error</h2>
-          <p>{error}</p>
-        </div>
-      ) : filteredProfiles.length === 0 ? (
-        <div className="text-center p-6 bg-gray-100 rounded-lg">
-          <h2 className="text-xl font-bold mb-2">No Executive Chairs Found</h2>
-          <p>There are no chairs available for the selected department.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {filteredProfiles.map((profile) => (
-            <div key={profile.id} className="border border-gray-200 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300">
-              <ExecChairsApp profile={profile} />
-            </div>
-          ))}
-        </div>
-      )}
-      
-      <footer className="mt-10 text-center text-sm text-gray-500">
-        <p>Data populated from Google Apps Script.</p>
-        <p className="mt-1">Total executive chairs: {profiles.length}</p>
-      </footer>
-    </div>
+        {loading ? (
+          <Flex 
+            justifyContent="center" 
+            alignItems="center" 
+            height="400px"
+          >
+            <Loader size="large" />
+          </Flex>
+        ) : error ? (
+          <View 
+            backgroundColor={tokens.colors.red[10].value}
+            padding={tokens.space.large.value}
+            borderRadius={tokens.radii.large.value}
+            maxWidth="600px"
+            margin="0 auto"
+            textAlign="center"
+          >
+            <Heading level={3} color={tokens.colors.red[80].value} marginBottom={tokens.space.small.value}>
+              Error
+            </Heading>
+            <Text color={tokens.colors.red[80].value}>{error}</Text>
+          </View>
+        ) : filteredProfiles.length === 0 ? (
+          <View 
+            backgroundColor={tokens.colors.neutral[20].value}
+            padding={tokens.space.large.value}
+            borderRadius={tokens.radii.large.value}
+            maxWidth="600px"
+            margin="0 auto"
+            textAlign="center"
+          >
+            <Heading level={3} marginBottom={tokens.space.small.value}>
+              No Executive Chairs Found
+            </Heading>
+            <Text>There are no chairs available for the selected major.</Text>
+          </View>
+        ) : (
+          <Grid
+            templateColumns={{ base: "1fr", large: "1fr 1fr" }}
+            gap={tokens.space.xl.value}
+          >
+            {filteredProfiles.map((profile) => (
+              <ExecChairProfile key={profile.id} profile={profile} />
+            ))}
+          </Grid>
+        )}
+        
+        <View textAlign="center" marginTop={tokens.space.xxl.value} color={tokens.colors.neutral[60].value}>
+          <Text>Data populated from Google Sheets API.</Text>
+          <Text marginTop={tokens.space.xs.value}>Total executive chairs: {profiles.length}</Text>
+          <Text marginTop={tokens.space.small.value} fontSize={tokens.fontSizes.xs.value}>
+            Last updated: {new Date().toLocaleDateString()}
+          </Text>
+        </View>
+      </View>
+    </View>
   );
 };
 

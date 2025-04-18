@@ -16,6 +16,6 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "pages/about.tsx", "pages/components/Navbar.jsx", "pages/components/NavbarAnimation.js", "**/*.jsx"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "pages/about.tsx", "pages/components/Navbar.jsx", "pages/components/NavbarAnimation.js", "**/*.jsx", "pages/components/ExecChairsApp.js"],
   "exclude": ["node_modules", "amplify"]
 }

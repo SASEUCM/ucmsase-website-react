@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -35,7 +35,7 @@ const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  const navLinks = [
+  const navLinks = useMemo(() => [
     { id: 'about', label: 'About Us', path: '/about' },
     { id: 'events', label: 'Events', path: '/events' },
     { id: 'gallery', label: 'Gallery', path: '/gallery' },
@@ -43,9 +43,9 @@ const Navbar = () => {
     { id: 'schedule', label: 'Schedule', path: '/schedule' },
     { id: 'contact', label: 'Contact', path: '/contact' },
     { id: 'eboard', label: 'E-Board', path: '/eboard' }
-  ];
+  ], []);
 
-  const adminNavLinks = [
+  const adminNavLinks = useMemo(() => [
     { id: 'dashboard', label: 'Dashboard', path: '/admin/dashboard' },
     { id: 'users', label: 'Users', path: '/admin/users' },
     { id: 'events', label: 'Events', path: '/admin/events' },
@@ -54,7 +54,7 @@ const Navbar = () => {
     { id: 'schedule', label: 'Schedule', path: '/schedule' },
     { id: 'subscribers', label: 'Subscribers', path: '/admin/subscribers' },
     { id: 'settings', label: 'Settings', path: '/admin/settings' },
-  ];
+  ], []);
 
   // Detect mobile
   useEffect(() => {
@@ -260,11 +260,12 @@ const Navbar = () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
       renderer.dispose();
       geometry.dispose();
-      bubblesRef.current.forEach((bubble) => {
+      const currentBubbles = bubblesRef.current;
+      currentBubbles.forEach((bubble) => {
         (bubble.mesh.material as THREE.MeshBasicMaterial).dispose();
       });
     };
-  }, [isMobile, isAdmin, router.pathname]);
+  }, [isMobile, isAdmin, router.pathname, isAuthenticated, navLinks, adminNavLinks]);
 
   // Hover effect on desktop
   const handleLinkHover = (linkId: string, hovering: boolean) => {

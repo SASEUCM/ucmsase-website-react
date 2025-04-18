@@ -171,14 +171,15 @@ const LoadingScreen: React.FC = () => {
     // Cleanup
     return () => {
       window.removeEventListener('resize', handleResize);
-      if (containerRef.current) {
-        if (containerRef.current.contains(loadingTextDiv)) {
-          containerRef.current.removeChild(loadingTextDiv);
+      const currentContainer = containerRef.current;
+      if (currentContainer) {
+        if (currentContainer.contains(loadingTextDiv)) {
+          currentContainer.removeChild(loadingTextDiv);
         }
-        if (containerRef.current.contains(progressBarContainer)) {
-          containerRef.current.removeChild(progressBarContainer);
+        if (currentContainer.contains(progressBarContainer)) {
+          currentContainer.removeChild(progressBarContainer);
         }
-        containerRef.current.removeChild(renderer.domElement);
+        currentContainer.removeChild(renderer.domElement);
       }
       renderer.dispose();
       

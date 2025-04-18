@@ -39,7 +39,8 @@ const InteractiveImage = ({ src, alt, onClick }: InteractiveImageProps) => {
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
     renderer.setClearColor(0x000000, 0); // Transparent background
-    containerRef.current.appendChild(renderer.domElement);
+    const currentContainer = containerRef.current;
+    currentContainer.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
     // Add lighting
@@ -138,8 +139,10 @@ const InteractiveImage = ({ src, alt, onClick }: InteractiveImageProps) => {
     return () => {
       window.removeEventListener('resize', handleResize);
       
-      if (containerRef.current && rendererRef.current) {
-        containerRef.current.removeChild(rendererRef.current.domElement);
+      const currentContainer = containerRef.current;
+      const currentRenderer = rendererRef.current;
+      if (currentContainer && currentRenderer) {
+        currentContainer.removeChild(currentRenderer.domElement);
       }
       
       if (planeRef.current) {
@@ -151,7 +154,7 @@ const InteractiveImage = ({ src, alt, onClick }: InteractiveImageProps) => {
         rendererRef.current.dispose();
       }
     };
-  }, [src]);
+  }, [src, isHovering]);
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!containerRef.current) return;

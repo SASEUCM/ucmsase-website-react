@@ -30,7 +30,8 @@ const AnimatedBackground = () => {
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setClearColor(0x000000, 0);
-    containerRef.current.appendChild(renderer.domElement);
+    const currentContainer = containerRef.current;
+    currentContainer.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
     // Add geometric shapes
@@ -152,8 +153,10 @@ const AnimatedBackground = () => {
     // Cleanup
     return () => {
       window.removeEventListener('resize', handleResize);
-      if (containerRef.current && rendererRef.current) {
-        containerRef.current.removeChild(rendererRef.current.domElement);
+      const currentContainer = containerRef.current;
+      const currentRenderer = rendererRef.current;
+      if (currentContainer && currentRenderer) {
+        currentContainer.removeChild(currentRenderer.domElement);
       }
       
       // Dispose of geometries and materials
