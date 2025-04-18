@@ -49,7 +49,7 @@ const Navbar = () => {
     submenu?: SubLink[]; // 👈 Optional submenu property
   }
 
-  const navLinks: NavLink[] = [
+  const navLinks = useMemo(() => [
     { id: 'about', label: 'About Us', path: '/about' },
     {
       id: 'events',
