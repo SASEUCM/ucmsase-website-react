@@ -2,16 +2,19 @@
 const SHEETS_API_KEY = 'AIzaSyAjz7rKp08q4i2KEwuhfvbBtwfV-gVp3FI'; // Your API key
 const SPREADSHEET_ID = '1LE9j22gEmi5oLNH7EawEA1DMn9T7C6fuoj6Uyir3YUQ'; // Your spreadsheet ID
 const SHEET_GID = '1679596791'; // Sheet GID from the URL
+const SBOD_SPREADSHEET_ID = '1kBxHY2P6cMYkGJ8CT5cWb_c5iPbYL1kwy4OzREz1qZs'; // SBOD spreadsheet ID
+const SBOD_SHEET_GID = '1698559295'; // SBOD Sheet GID from the URL
 
 /**
  * Fetches the sheet name corresponding to a sheet GID
+ * @param {string} spreadsheetId - The ID of the spreadsheet
  * @param {string} gid - The GID of the sheet to lookup
  * @returns {Promise<string>} Sheet name
  */
-export const getSheetNameFromGid = async (gid) => {
+export const getSheetNameFromGid = async (spreadsheetId, gid) => {
   try {
     // First, get the spreadsheet metadata which includes info about all sheets
-    const metadataUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}?key=${SHEETS_API_KEY}`;
+    const metadataUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?key=${SHEETS_API_KEY}`;
     
     const response = await fetch(metadataUrl);
     
@@ -48,7 +51,7 @@ export const getSheetNameFromGid = async (gid) => {
 export const fetchProfiles = async () => {
   try {
     // First get the sheet name corresponding to the GID
-    const sheetName = await getSheetNameFromGid(SHEET_GID);
+    const sheetName = await getSheetNameFromGid(SPREADSHEET_ID, SHEET_GID);
     
     // Then use the sheet name in the values API call
     const apiUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(sheetName)}!A1:Z1000?key=${SHEETS_API_KEY}`;
@@ -180,6 +183,144 @@ export const fetchProfiles = async () => {
 };
 
 /**
+ * Fetches SBOD profiles from a Google Sheet using GID
+ * @returns {Promise<Array>} Array of profile objects
+ */
+export const fetchSBODProfiles = async () => {
+  try {
+    // First get the sheet name corresponding to the GID
+    const sheetName = await getSheetNameFromGid(SBOD_SPREADSHEET_ID, SBOD_SHEET_GID);
+    
+    // Then use the sheet name in the values API call
+    const apiUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SBOD_SPREADSHEET_ID}/values/${encodeURIComponent(sheetName)}!A1:Z1000?key=${SHEETS_API_KEY}`;
+    
+    const response = await fetch(apiUrl);
+    
+    if (!response.ok) {
+      throw new Error(`Google Sheets API error: ${response.status} ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    
+    if (!data.values || data.values.length < 2) {
+      throw new Error('No data found in the Google Sheet or invalid format');
+    }
+    
+    // The first row contains headers
+    const headers = data.values[0];
+    console.log('Headers from SBOD sheet:', headers);
+    
+    // Create a lookup object for column indexes
+    const columnIndexes = {};
+    headers.forEach((header, index) => {
+      const key = normalizeHeaderName(header);
+      columnIndexes[key] = index;
+    });
+    
+    console.log('SBOD Column indexes:', columnIndexes);
+    
+    // Map the rows to objects using the headers as keys
+    const profiles = data.values.slice(1).map((row, index) => {
+      // Initialize with required fields
+      const profile = {
+        id: `sbod-${index + 1}`,
+        // Make sure all fields have a valid default
+        name: '', 
+        year: '',
+        major: '',
+        photoUrl: '',
+        clubs: '',
+        hours: '',
+        why: '',
+        resumeUrl: '',
+        careerAlignment: '',
+        contribution: '',
+        technicalSkills: '',
+        achievements: ''
+      };
+      
+      // Explicitly map each expected field using column indexes
+      if (columnIndexes.name !== undefined && row[columnIndexes.name] !== undefined && row[columnIndexes.name] !== '') {
+        profile.name = row[columnIndexes.name];
+      }
+      
+      if (columnIndexes.year !== undefined && row[columnIndexes.year] !== undefined && row[columnIndexes.year] !== '') {
+        profile.year = row[columnIndexes.year];
+      }
+      
+      if (columnIndexes.major !== undefined && row[columnIndexes.major] !== undefined && row[columnIndexes.major] !== '') {
+        profile.major = row[columnIndexes.major];
+      }
+      
+      if (columnIndexes.photoUrl !== undefined && row[columnIndexes.photoUrl] !== undefined && row[columnIndexes.photoUrl] !== '') {
+        profile.photoUrl = row[columnIndexes.photoUrl];
+      }
+      
+      if (columnIndexes.clubs !== undefined && row[columnIndexes.clubs] !== undefined && row[columnIndexes.clubs] !== '') {
+        profile.clubs = row[columnIndexes.clubs];
+      }
+      
+      if (columnIndexes.hours !== undefined && row[columnIndexes.hours] !== undefined && row[columnIndexes.hours] !== '') {
+        profile.hours = row[columnIndexes.hours];
+      }
+      
+      if (columnIndexes.why !== undefined && row[columnIndexes.why] !== undefined && row[columnIndexes.why] !== '') {
+        profile.why = row[columnIndexes.why];
+      }
+      
+      if (columnIndexes.resumeUrl !== undefined && row[columnIndexes.resumeUrl] !== undefined && row[columnIndexes.resumeUrl] !== '') {
+        profile.resumeUrl = row[columnIndexes.resumeUrl];
+      }
+      
+      if (columnIndexes.careerAlignment !== undefined && row[columnIndexes.careerAlignment] !== undefined && row[columnIndexes.careerAlignment] !== '') {
+        profile.careerAlignment = row[columnIndexes.careerAlignment];
+      }
+      
+      if (columnIndexes.contribution !== undefined && row[columnIndexes.contribution] !== undefined && row[columnIndexes.contribution] !== '') {
+        profile.contribution = row[columnIndexes.contribution];
+      }
+      
+      if (columnIndexes.technicalSkills !== undefined && row[columnIndexes.technicalSkills] !== undefined && row[columnIndexes.technicalSkills] !== '') {
+        profile.technicalSkills = row[columnIndexes.technicalSkills];
+      }
+      
+      if (columnIndexes.achievements !== undefined && row[columnIndexes.achievements] !== undefined && row[columnIndexes.achievements] !== '') {
+        profile.achievements = row[columnIndexes.achievements];
+      }
+      
+      return profile;
+    });
+    
+    // Debug raw data for the first profile
+    if (profiles.length > 0) {
+      console.log('First SBOD profile raw data from sheet:', data.values[1]);
+      console.log('First SBOD profile processed data:', profiles[0]);
+    }
+    
+    // Debug all profiles
+    console.log('All SBOD profiles with critical fields:');
+    profiles.forEach(profile => {
+      console.log(`SBOD Profile #${profile.id}`);
+      console.log(`Name: '${profile.name}' (${typeof profile.name})`);
+      console.log(`Photo URL: '${profile.photoUrl}' (${typeof profile.photoUrl})`);
+      console.log(`Hours: '${profile.hours}' (${typeof profile.hours})`);
+      console.log(`Clubs: '${profile.clubs}' (${typeof profile.clubs})`);
+      console.log(`Why: '${profile.why}' (${typeof profile.why})`);
+      console.log(`CareerAlignment: '${profile.careerAlignment}' (${typeof profile.careerAlignment})`);
+      console.log(`Contribution: '${profile.contribution}' (${typeof profile.contribution})`);
+      console.log(`TechnicalSkills: '${profile.technicalSkills}' (${typeof profile.technicalSkills})`);
+      console.log(`Achievements: '${profile.achievements}' (${typeof profile.achievements})`);
+      console.log('---');
+    });
+    
+    return profiles;
+  } catch (error) {
+    console.error('Error fetching SBOD profiles from Google Sheets:', error);
+    throw error;
+  }
+};
+
+/**
  * Normalizes header names to consistent camelCase format
  * @param {string} header - The header name from the spreadsheet
  * @returns {string} Normalized header name
@@ -187,6 +328,7 @@ export const fetchProfiles = async () => {
 const normalizeHeaderName = (header) => {
   // Handle form response headers based on your Google Form
   const headerMap = {
+    // Original exec chair form headers
     'Timestamp': 'timestamp',
     'What is your name?': 'name',
     'Upload a picture of yourself': 'photoUrl',
@@ -199,7 +341,21 @@ const normalizeHeaderName = (header) => {
     'How does SASE align with your career goals? (100-200 Words)': 'careerAlignment',
     'What can you provide to SASE? (100-200 Words)': 'contribution',
     'What are some technical skills you have?': 'technicalSkills',
-    'List your skills/awards/certifications': 'achievements'
+    'List your skills/awards/certifications': 'achievements',
+    
+    // SBOD form headers
+    'What is your first and last name?': 'name',
+    'What year are you at UC Merced?': 'year',
+    'What is your Major?': 'major',
+    'Do you have any other affiliations with organizations on campus?': 'clubs',
+    'How many hours can you commit to SASE per week?': 'hours',
+    'Please upload your resume below': 'resumeUrl',
+    'Please upload a photo of yourself or a photo that represents you in your campaign': 'photoUrl',
+    'List your awards/certifications (if applicable)': 'achievements',
+    'List your technical skills (if applicable)': 'technicalSkills',
+    'Why do you want to join SASE? (100-200 words)': 'why',
+    'What can you provide to SASE? (100-200 words)': 'contribution',
+    'How does SASE align with your career goals? (100-200 words': 'careerAlignment'
   };
   
   // Return mapped value if exists, otherwise convert to camelCase
