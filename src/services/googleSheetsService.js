@@ -161,6 +161,7 @@ export const fetchProfiles = async () => {
     profiles.forEach(profile => {
       console.log(`Profile #${profile.id}`);
       console.log(`Name: '${profile.name}' (${typeof profile.name})`);
+      console.log(`Photo URL: '${profile.photoUrl}' (${typeof profile.photoUrl})`);
       console.log(`Hours: '${profile.hours}' (${typeof profile.hours})`);
       console.log(`Clubs: '${profile.clubs}' (${typeof profile.clubs})`);
       console.log(`Why: '${profile.why}' (${typeof profile.why})`);

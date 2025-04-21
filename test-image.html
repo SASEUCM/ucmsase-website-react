@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Drive Image Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .image-container {
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        h3 {
+            margin-top: 0;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Google Drive Image Test</h1>
+    
+    <div class="image-container">
+        <h3>Direct uc?export=view URL</h3>
+        <img src="https://drive.google.com/uc?export=view&id=1XslxH6hN3JejRuZP1uLI3vS2RfIneF83" 
+             alt="Google Drive Image - export=view method" 
+             onerror="this.onerror=null; this.src='https://placehold.co/400x300?text=Failed+to+Load'; this.nextElementSibling.style.display='block';">
+        <p style="color: red; display: none;">This image failed to load.</p>
+    </div>
+
+    <div class="image-container">
+        <h3>Alternate Format (thumbnail)</h3>
+        <img src="https://drive.google.com/thumbnail?id=1XslxH6hN3JejRuZP1uLI3vS2RfIneF83&sz=w1000" 
+             alt="Google Drive Image - thumbnail method" 
+             onerror="this.onerror=null; this.src='https://placehold.co/400x300?text=Failed+to+Load'; this.nextElementSibling.style.display='block';">
+        <p style="color: red; display: none;">This image failed to load.</p>
+    </div>
+
+    <div class="image-container">
+        <h3>Direct file URL</h3>
+        <img src="https://drive.google.com/file/d/1XslxH6hN3JejRuZP1uLI3vS2RfIneF83/view" 
+             alt="Google Drive Image - direct file URL" 
+             onerror="this.onerror=null; this.src='https://placehold.co/400x300?text=Failed+to+Load'; this.nextElementSibling.style.display='block';">
+        <p style="color: red; display: none;">This image failed to load.</p>
+    </div>
+
+    <div class="image-container">
+        <h3>Google Photos API format</h3>
+        <img src="https://lh3.googleusercontent.com/d/1XslxH6hN3JejRuZP1uLI3vS2RfIneF83" 
+             alt="Google Drive Image - Google Photos API format" 
+             onerror="this.onerror=null; this.src='https://placehold.co/400x300?text=Failed+to+Load'; this.nextElementSibling.style.display='block';">
+        <p style="color: red; display: none;">This image failed to load.</p>
+    </div>
+
+    <div class="image-container">
+        <h3>Iframe Embed (This should work)</h3>
+        <iframe src="https://drive.google.com/file/d/1XslxH6hN3JejRuZP1uLI3vS2RfIneF83/preview" 
+                width="100%" 
+                height="400" 
+                frameborder="0"
+                allowfullscreen></iframe>
+    </div>
+</body>
+</html>
