@@ -20,6 +20,7 @@ const ExecChairsAppPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filterDepartment, setFilterDepartment] = useState('');
+  const [filterYear, setFilterYear] = useState('');
   const [selectedPage, setSelectedPage] = useState('execChairs'); // New state for page selection
 
   useEffect(() => {
@@ -47,9 +48,12 @@ const ExecChairsAppPage = () => {
   }, [selectedPage]);
 
   const majors = [...new Set(profiles.map(profile => profile.major))].filter(Boolean);
-  const filteredProfiles = filterDepartment
-    ? profiles.filter(profile => profile.major === filterDepartment)
-    : profiles;
+  const years = [...new Set(profiles.map(profile => profile.year))].filter(Boolean);
+  const filteredProfiles = profiles.filter(profile => {
+    const matchesMajor = filterDepartment ? profile.major === filterDepartment : true;
+    const matchesYear = filterYear ? profile.year === filterYear : true;
+    return matchesMajor && matchesYear;
+  });
 
   return (
     <View backgroundColor={tokens.colors.neutral[10].value} padding={tokens.space.large.value} minHeight="100vh">
@@ -75,25 +79,49 @@ const ExecChairsAppPage = () => {
               <Text fontSize={tokens.fontSizes.large.value} color={tokens.colors.neutral[80].value} marginBottom={tokens.space.xl.value}>
                 Meet our leadership team and department chairs
               </Text>
-
-              <View maxWidth="400px" margin="0 auto" marginBottom={tokens.space.xl.value}>
-                <SelectField
-                  label="Filter by Major"
-                  labelHidden={false}
-                  value={filterDepartment}
-                  onChange={(e) => setFilterDepartment(e.target.value)}
-                  fontSize={tokens.fontSizes.medium.value}
-                >
-                  <option value="">All Majors</option>
-                  {majors.map((major) => (
-                    <option key={major} value={major}>
-                      {major}
-                    </option>
-                  ))}
-                </SelectField>
+            <View>
+              <Flex
+                direction="row"
+                justifyContent="center"
+                gap={tokens.space.medium.value}
+                marginBottom={tokens.space.xl.value}
+                flexWrap="wrap" // optional, allows wrap on small screens
+              >
+                <View maxWidth="400px" margin="0 auto" marginBottom={tokens.space.xl.value}>
+                  <SelectField
+                    label="Filter by Major"
+                    labelHidden={false}
+                    value={filterDepartment}
+                    onChange={(e) => setFilterDepartment(e.target.value)}
+                    fontSize={tokens.fontSizes.medium.value}
+                  >
+                    <option value="">All Majors</option>
+                    {majors.map((major) => (
+                      <option key={major} value={major}>
+                        {major}
+                      </option>
+                    ))}
+                  </SelectField>
+                </View>
+                  <View maxWidth="400px" margin="0 auto" marginBottom={tokens.space.xl.value}>
+                    <SelectField
+                      label="Filter by Year"
+                      labelHidden={false}
+                      value={filterYear}
+                      onChange={(e) => setFilterYear(e.target.value)}
+                      fontSize={tokens.fontSizes.medium.value}
+                    >
+                      <option value="">All Years</option>
+                      {years.map((year) => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      ))}
+                    </SelectField>
+                  </View>
+                </Flex>
               </View>
             </View>
-
             {loading ? (
               <Flex justifyContent="center" alignItems="center" height="400px">
                 <Loader size="large" />
