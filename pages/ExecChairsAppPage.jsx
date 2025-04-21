@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import ExecChairProfile from './components/ExecChairProfile';
+import SBODProfile from './components/SBODProfile';
 // You can import other components here, like AdvisoryBoard, TeamMembers, etc.
-import { fetchProfiles } from '../src/services/googleSheetsService';
+import { fetchProfiles, fetchSBODProfiles } from '../src/services/googleSheetsService';
 import {
   View,
   Heading,
@@ -25,18 +26,25 @@ const ExecChairsAppPage = () => {
     const getProfiles = async () => {
       try {
         setLoading(true);
-        const profilesData = await fetchProfiles();
+        let profilesData;
+        
+        if (selectedPage === 'execChairs') {
+          profilesData = await fetchProfiles();
+        } else if (selectedPage === 'SBOD') {
+          profilesData = await fetchSBODProfiles();
+        }
+        
         setProfiles(profilesData);
         setError(null);
       } catch (err) {
-        setError(`Failed to load executive chairs: ${err.message}`);
+        setError(`Failed to load ${selectedPage === 'execChairs' ? 'executive chairs' : 'SBOD members'}: ${err.message}`);
       } finally {
         setLoading(false);
       }
     };
 
     getProfiles();
-  }, []);
+  }, [selectedPage]);
 
   const majors = [...new Set(profiles.map(profile => profile.major))].filter(Boolean);
   const filteredProfiles = filterDepartment
@@ -123,10 +131,67 @@ const ExecChairsAppPage = () => {
         )}
 
         {selectedPage === 'SBOD' && (
-          <View textAlign="center">
-            <Heading level={2} marginBottom={tokens.space.medium.value}>Student Board of Directors</Heading>
-            <Text>This is where the Student Board of Directors content will go.</Text>
-          </View>
+          <>
+            <View textAlign="center" marginBottom={tokens.space.xl.value}>
+              <Heading level={1} color="#1A54C4" marginBottom={tokens.space.small.value}>
+                Student Board of Directors
+              </Heading>
+              <Text fontSize={tokens.fontSizes.large.value} color={tokens.colors.neutral[80].value} marginBottom={tokens.space.xl.value}>
+                Meet our Student Board of Directors
+              </Text>
+
+              <View maxWidth="400px" margin="0 auto" marginBottom={tokens.space.xl.value}>
+                <SelectField
+                  label="Filter by Major"
+                  labelHidden={false}
+                  value={filterDepartment}
+                  onChange={(e) => setFilterDepartment(e.target.value)}
+                  fontSize={tokens.fontSizes.medium.value}
+                >
+                  <option value="">All Majors</option>
+                  {majors.map((major) => (
+                    <option key={major} value={major}>
+                      {major}
+                    </option>
+                  ))}
+                </SelectField>
+              </View>
+            </View>
+
+            {loading ? (
+              <Flex justifyContent="center" alignItems="center" height="400px">
+                <Loader size="large" />
+              </Flex>
+            ) : error ? (
+              <View backgroundColor={tokens.colors.red[10].value} padding={tokens.space.large.value} borderRadius={tokens.radii.large.value} maxWidth="600px" margin="0 auto" textAlign="center">
+                <Heading level={3} color={tokens.colors.red[80].value} marginBottom={tokens.space.small.value}>
+                  Error
+                </Heading>
+                <Text color={tokens.colors.red[80].value}>{error}</Text>
+              </View>
+            ) : filteredProfiles.length === 0 ? (
+              <View backgroundColor={tokens.colors.neutral[20].value} padding={tokens.space.large.value} borderRadius={tokens.radii.large.value} maxWidth="600px" margin="0 auto" textAlign="center">
+                <Heading level={3} marginBottom={tokens.space.small.value}>
+                  No SBOD Members Found
+                </Heading>
+                <Text>There are no SBOD members available for the selected major.</Text>
+              </View>
+            ) : (
+              <Grid templateColumns={{ base: "1fr", large: "1fr 1fr" }} gap={tokens.space.xl.value}>
+                {filteredProfiles.map((profile) => (
+                  <SBODProfile key={profile.id} profile={profile} />
+                ))}
+              </Grid>
+            )}
+
+            <View textAlign="center" marginTop={tokens.space.xxl.value} color={tokens.colors.neutral[60].value}>
+              <Text>Data populated from Google Sheets API.</Text>
+              <Text marginTop={tokens.space.xs.value}>Total SBOD members: {profiles.length}</Text>
+              <Text marginTop={tokens.space.small.value} fontSize={tokens.fontSizes.xs.value}>
+                Last updated: {new Date().toLocaleDateString()}
+              </Text>
+            </View>
+          </>
         )}
       </View>
     </View>
