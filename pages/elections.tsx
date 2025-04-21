@@ -146,10 +146,10 @@ export default function ElectionsPage() {
 
         {/* SBOD Positions */}
         <Heading level={3} marginTop="2rem">
-          Student Board of Directors (SBOD)
+          Executive Chair Positions
         </Heading>
         <Text marginBottom="1rem">
-          SBOD members form the core leadership team of SASE and are responsible for the overall direction and management of the organization.
+          Executive Chairs lead specific aspects of the organization and work closely with SBOD to implement the organization&apos;s vision.
         </Text>
         <Flex direction={{ base: 'column', medium: 'row' }} wrap="wrap" gap="1rem">
           {positions
@@ -176,10 +176,10 @@ export default function ElectionsPage() {
 
         {/* Executive Chair Positions */}
         <Heading level={3} marginTop="2rem">
-          Executive Chair Positions
+          Student Board of Directors (SBOD)
         </Heading>
         <Text marginBottom="1rem">
-          Executive Chairs lead specific aspects of the organization and work closely with SBOD to implement the organization&apos;s vision.
+        SBOD members form the core leadership team of SASE and are responsible for the overall direction and management of the organization.
         </Text>
         <Flex direction={{ base: 'column', medium: 'row' }} wrap="wrap" gap="1rem">
           {positions
@@ -214,7 +214,7 @@ export default function ElectionsPage() {
             <Text marginBottom="1rem">Click the &quot;Apply Now&quot; button to fill out our application form.</Text>
             
             <Heading level={4}>What is the time commitment?</Heading>
-            <Text marginBottom="1rem">SBOD positions typically require 5-7 hours per week, while Executive Chair positions require 3-5 hours per week.</Text>
+            <Text marginBottom="1rem">Executive Chair positions typically require 5-7 hours per week, while SBOD positions require 3-5 hours per week.</Text>
             
             <Heading level={4}>Who can apply?</Heading>
             <Text marginBottom="1rem">Any active SASE member enrolled at UCM can apply. Some positions have specific requirements as noted above.</Text>
