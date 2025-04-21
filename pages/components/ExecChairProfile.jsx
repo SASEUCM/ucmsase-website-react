@@ -56,6 +56,11 @@ const ExecChairProfile = ({ profile }) => {
       </View>
     );
   };
+  
+  // Helper function to check if field has meaningful content
+  const hasContent = (field) => {
+    return field && field.trim() !== '';
+  };
 
   return (
     <Card
@@ -70,13 +75,13 @@ const ExecChairProfile = ({ profile }) => {
       <View padding={tokens.space.large.value}>
         <View textAlign="center" marginBottom={tokens.space.medium.value}>
           <Heading level={3} color="#1A54C4" marginBottom={tokens.space.xs.value}>
-            {profile.name || 'Unknown Name'}
+            {hasContent(profile.name) ? profile.name : 'Unknown Name'}
           </Heading>
           <Text color={tokens.colors.neutral[80].value}>
-            {profile.year || 'Unknown Year'}
+            {hasContent(profile.year) ? profile.year : 'Unknown Year'}
           </Text>
           <Text color={tokens.colors.neutral[80].value}>
-            {profile.major || 'Unknown Major'}
+            {hasContent(profile.major) ? profile.major : 'Unknown Major'}
           </Text>
         </View>
         
@@ -88,7 +93,7 @@ const ExecChairProfile = ({ profile }) => {
               Weekly Availability:
             </Text>
             <Text fontSize={tokens.fontSizes.small.value}>
-              {profile.hours || 'Not specified'} hours per week
+              {hasContent(profile.hours) ? `${profile.hours} hours per week` : 'Not specified'}
             </Text>
           </View>
           
@@ -97,7 +102,7 @@ const ExecChairProfile = ({ profile }) => {
               Other Clubs/Organizations:
             </Text>
             <Text fontSize={tokens.fontSizes.small.value}>
-              {profile.clubs || 'None specified'}
+              {hasContent(profile.clubs) ? profile.clubs : 'None specified'}
             </Text>
           </View>
           
@@ -106,9 +111,53 @@ const ExecChairProfile = ({ profile }) => {
               Why They Want to Join:
             </Text>
             <Text fontSize={tokens.fontSizes.small.value} fontStyle="italic">
-              {profile.why || 'No reason provided'}
+              {hasContent(profile.why) ? profile.why : 'No reason provided'}
             </Text>
           </View>
+          
+          {hasContent(profile.careerAlignment) && (
+            <View>
+              <Text fontWeight="bold" color={tokens.colors.neutral[90].value}>
+                How SASE Aligns with Career Goals:
+              </Text>
+              <Text fontSize={tokens.fontSizes.small.value} fontStyle="italic">
+                {profile.careerAlignment}
+              </Text>
+            </View>
+          )}
+          
+          {hasContent(profile.contribution) && (
+            <View>
+              <Text fontWeight="bold" color={tokens.colors.neutral[90].value}>
+                What They Can Provide to SASE:
+              </Text>
+              <Text fontSize={tokens.fontSizes.small.value} fontStyle="italic">
+                {profile.contribution}
+              </Text>
+            </View>
+          )}
+          
+          {hasContent(profile.technicalSkills) && (
+            <View>
+              <Text fontWeight="bold" color={tokens.colors.neutral[90].value}>
+                Technical Skills:
+              </Text>
+              <Text fontSize={tokens.fontSizes.small.value}>
+                {profile.technicalSkills}
+              </Text>
+            </View>
+          )}
+          
+          {hasContent(profile.achievements) && (
+            <View>
+              <Text fontWeight="bold" color={tokens.colors.neutral[90].value}>
+                Skills/Awards/Certifications:
+              </Text>
+              <Text fontSize={tokens.fontSizes.small.value}>
+                {profile.achievements}
+              </Text>
+            </View>
+          )}
         </View>
         
         {profile.resumeUrl && (

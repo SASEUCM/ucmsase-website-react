@@ -67,21 +67,108 @@ export const fetchProfiles = async () => {
     
     // The first row contains headers
     const headers = data.values[0];
+    console.log('Headers from sheet:', headers);
+    
+    // Create a lookup object for column indexes
+    const columnIndexes = {};
+    headers.forEach((header, index) => {
+      const key = normalizeHeaderName(header);
+      columnIndexes[key] = index;
+    });
+    
+    console.log('Column indexes:', columnIndexes);
     
     // Map the rows to objects using the headers as keys
     const profiles = data.values.slice(1).map((row, index) => {
+      // Initialize with required fields
       const profile = {
         id: `chair-${index + 1}`,
+        // Make sure all fields have a valid default
+        name: '', 
+        year: '',
+        major: '',
+        photoUrl: '',
+        clubs: '',
+        hours: '',
+        why: '',
+        resumeUrl: '',
+        careerAlignment: '',
+        contribution: '',
+        technicalSkills: '',
+        achievements: ''
       };
       
-      // Map each column value to its corresponding header
-      headers.forEach((header, i) => {
-        // Normalize header names to camelCase
-        const key = normalizeHeaderName(header);
-        profile[key] = row[i] || ''; // Use empty string as fallback
-      });
+      // Explicitly map each expected field using column indexes
+      if (columnIndexes.name !== undefined && row[columnIndexes.name] !== undefined && row[columnIndexes.name] !== '') {
+        profile.name = row[columnIndexes.name];
+      }
+      
+      if (columnIndexes.year !== undefined && row[columnIndexes.year] !== undefined && row[columnIndexes.year] !== '') {
+        profile.year = row[columnIndexes.year];
+      }
+      
+      if (columnIndexes.major !== undefined && row[columnIndexes.major] !== undefined && row[columnIndexes.major] !== '') {
+        profile.major = row[columnIndexes.major];
+      }
+      
+      if (columnIndexes.photoUrl !== undefined && row[columnIndexes.photoUrl] !== undefined && row[columnIndexes.photoUrl] !== '') {
+        profile.photoUrl = row[columnIndexes.photoUrl];
+      }
+      
+      if (columnIndexes.clubs !== undefined && row[columnIndexes.clubs] !== undefined && row[columnIndexes.clubs] !== '') {
+        profile.clubs = row[columnIndexes.clubs];
+      }
+      
+      if (columnIndexes.hours !== undefined && row[columnIndexes.hours] !== undefined && row[columnIndexes.hours] !== '') {
+        profile.hours = row[columnIndexes.hours];
+      }
+      
+      if (columnIndexes.why !== undefined && row[columnIndexes.why] !== undefined && row[columnIndexes.why] !== '') {
+        profile.why = row[columnIndexes.why];
+      }
+      
+      if (columnIndexes.resumeUrl !== undefined && row[columnIndexes.resumeUrl] !== undefined && row[columnIndexes.resumeUrl] !== '') {
+        profile.resumeUrl = row[columnIndexes.resumeUrl];
+      }
+      
+      if (columnIndexes.careerAlignment !== undefined && row[columnIndexes.careerAlignment] !== undefined && row[columnIndexes.careerAlignment] !== '') {
+        profile.careerAlignment = row[columnIndexes.careerAlignment];
+      }
+      
+      if (columnIndexes.contribution !== undefined && row[columnIndexes.contribution] !== undefined && row[columnIndexes.contribution] !== '') {
+        profile.contribution = row[columnIndexes.contribution];
+      }
+      
+      if (columnIndexes.technicalSkills !== undefined && row[columnIndexes.technicalSkills] !== undefined && row[columnIndexes.technicalSkills] !== '') {
+        profile.technicalSkills = row[columnIndexes.technicalSkills];
+      }
+      
+      if (columnIndexes.achievements !== undefined && row[columnIndexes.achievements] !== undefined && row[columnIndexes.achievements] !== '') {
+        profile.achievements = row[columnIndexes.achievements];
+      }
       
       return profile;
+    });
+    
+    // Debug raw data for the first profile
+    if (profiles.length > 0) {
+      console.log('First profile raw data from sheet:', data.values[1]);
+      console.log('First profile processed data:', profiles[0]);
+    }
+    
+    // Debug all profiles
+    console.log('All profiles with critical fields:');
+    profiles.forEach(profile => {
+      console.log(`Profile #${profile.id}`);
+      console.log(`Name: '${profile.name}' (${typeof profile.name})`);
+      console.log(`Hours: '${profile.hours}' (${typeof profile.hours})`);
+      console.log(`Clubs: '${profile.clubs}' (${typeof profile.clubs})`);
+      console.log(`Why: '${profile.why}' (${typeof profile.why})`);
+      console.log(`CareerAlignment: '${profile.careerAlignment}' (${typeof profile.careerAlignment})`);
+      console.log(`Contribution: '${profile.contribution}' (${typeof profile.contribution})`);
+      console.log(`TechnicalSkills: '${profile.technicalSkills}' (${typeof profile.technicalSkills})`);
+      console.log(`Achievements: '${profile.achievements}' (${typeof profile.achievements})`);
+      console.log('---');
     });
     
     return profiles;
@@ -104,10 +191,14 @@ const normalizeHeaderName = (header) => {
     'Upload a picture of yourself': 'photoUrl',
     'What year are you?': 'year',
     'What is your major?': 'major',
-    'What other clubs/organizations are you part of?': 'clubs',
-    'How many hours can you spend doing club-work per week?': 'hours',
+    'What other clubs/organizations are you part of on campus?': 'clubs',
+    'How many hours can you spend doing sase releated work each week?': 'hours',
     'Upload your resume': 'resumeUrl',
-    'Why do you want to join?': 'why'
+    'Why do you want to join SASE? (100-200 Words)': 'why',
+    'How does SASE align with your career goals? (100-200 Words)': 'careerAlignment',
+    'What can you provide to SASE? (100-200 Words)': 'contribution',
+    'What are some technical skills you have?': 'technicalSkills',
+    'List your skills/awards/certifications': 'achievements'
   };
   
   // Return mapped value if exists, otherwise convert to camelCase
