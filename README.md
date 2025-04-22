@@ -17,3 +17,18 @@
 ```git push```
 
 ## Features
+
+### Voting System
+The website includes a voting system for Executive Chair candidates:
+
+- Users must be authenticated to vote
+- One vote per account
+- Votes are stored in AWS Amplify database
+- Vote results accessible to admins at `/admin/vote-results`
+
+To enable voting:
+1. Initialize the database: `npx ampx sandbox --profile amplify-policy-863518450047`
+2. Visit the Executive Chairs page
+3. Toggle "Show Voting Interface" to display voting buttons
+4. Only authenticated users can vote
+5. Users can only vote once

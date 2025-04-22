@@ -76,10 +76,19 @@ export const fetchProfiles = async () => {
     const columnIndexes = {};
     headers.forEach((header, index) => {
       const key = normalizeHeaderName(header);
+      console.log(`Header: '${header}' -> Normalized Key: '${key}' at index ${index}`);
       columnIndexes[key] = index;
     });
     
     console.log('Column indexes:', columnIndexes);
+    
+    // Double check that we have the position preferences column
+    if (columnIndexes.preferredPositions === undefined) {
+      console.warn('WARNING: No preferred positions column found in the sheet. Available columns:', 
+        headers.map(h => `'${h}'`).join(', '));
+    } else {
+      console.log('Found preferred positions column at index:', columnIndexes.preferredPositions);
+    }
     
     // Map the rows to objects using the headers as keys
     const profiles = data.values.slice(1).map((row, index) => {
@@ -98,7 +107,8 @@ export const fetchProfiles = async () => {
         careerAlignment: '',
         contribution: '',
         technicalSkills: '',
-        achievements: ''
+        achievements: '',
+        preferredPositions: []  // Array to store position preferences
       };
       
       // Explicitly map each expected field using column indexes
@@ -148,6 +158,88 @@ export const fetchProfiles = async () => {
       
       if (columnIndexes.achievements !== undefined && row[columnIndexes.achievements] !== undefined && row[columnIndexes.achievements] !== '') {
         profile.achievements = row[columnIndexes.achievements];
+      }
+      
+      // Parse preferred positions
+      if (columnIndexes.preferredPositions !== undefined && row[columnIndexes.preferredPositions] !== undefined && row[columnIndexes.preferredPositions] !== '') {
+        // Log the raw positions text for debugging
+        const positionsText = row[columnIndexes.preferredPositions];
+        console.log(`Raw position data for ${profile.name}:`, positionsText);
+        console.log(`Raw position column index:`, columnIndexes.preferredPositions);
+        console.log(`Raw position column data:`, row[columnIndexes.preferredPositions]);
+        
+        // Parse the text into an array of position names (lowercase for consistency)
+        // Handle different possible formats - comma separated list or newline separated list
+        let positions = [];
+        
+        // Log the exact raw data to understand the format
+        console.log(`Position text for ${profile.name} (${typeof positionsText}): "${positionsText}"`);
+        
+        // Check for multiple positions format (comma, newline, or other separators)
+        if (positionsText.includes(',')) {
+          // Handle comma-separated format (most common)
+          // Example: "President, Vice-President"
+          positions = positionsText.split(',');
+          console.log(`Split by comma:`, positions);
+        } else if (positionsText.includes('\n')) {
+          // Handle newline-separated format
+          positions = positionsText.split('\n');
+          console.log(`Split by newline:`, positions);
+        } else if (positionsText.includes(';')) {
+          // Handle semicolon-separated format
+          positions = positionsText.split(';');
+          console.log(`Split by semicolon:`, positions);
+        } else {
+          // Single value
+          positions = [positionsText];
+          console.log(`Single position:`, positions);
+        }
+        
+        // Clean up and normalize position names
+        profile.preferredPositions = positions
+          .map(pos => {
+            const cleaned = pos.trim().toLowerCase();
+            console.log(`Processing position: "${cleaned}"`);
+            
+            // Map common position names to standard format
+            if (cleaned === 'president' || cleaned.includes('president')) {
+              if (cleaned.includes('vice') || cleaned.includes('vp') || cleaned === 'vice-president') {
+                return 'vp';
+              }
+              return 'president';
+            }
+            
+            // Other position matching
+            if (cleaned === 'vice-president' || cleaned === 'vice president' || 
+                cleaned.includes('vice president') || cleaned.includes('vp')) {
+              return 'vp';
+            }
+            if (cleaned.includes('treasurer')) return 'treasurer';
+            if (cleaned.includes('secretary')) return 'secretary';
+            
+            // SBOD specific positions
+            if (cleaned.includes('webmaster') || cleaned.includes('tech lead') || cleaned.includes('math')) return 'webmaster';
+            if (cleaned.includes('cultural') || cleaned.includes('social')) return 'cultural';
+            if (cleaned.includes('ui') || cleaned.includes('ux') || cleaned.includes('marketing')) return 'ui-ux-marketing';
+            if (cleaned.includes('engineering') || cleaned.includes('vanguard')) return 'engineering-vanguard';
+            if (cleaned.includes('natural science') || cleaned.includes('research')) return 'natural-sciences-research';
+            if (cleaned.includes('director')) return 'director';
+            if (cleaned.includes('manager')) return 'manager';
+            if (cleaned.includes('coordinator')) return 'coordinator';
+            
+            console.log(`Position not recognized, using as-is: "${cleaned}"`);
+            return cleaned;
+          })
+          .filter(pos => pos !== '');
+          
+        console.log(`Parsed positions for ${profile.name}:`, profile.preferredPositions);
+      } else {
+        console.log(`No position data for ${profile.name}:`, {
+          hasIndex: columnIndexes.preferredPositions !== undefined,
+          hasData: columnIndexes.preferredPositions !== undefined && 
+                  row[columnIndexes.preferredPositions] !== undefined && 
+                  row[columnIndexes.preferredPositions] !== ''
+        });
       }
       
       return profile;
@@ -214,10 +306,19 @@ export const fetchSBODProfiles = async () => {
     const columnIndexes = {};
     headers.forEach((header, index) => {
       const key = normalizeHeaderName(header);
+      console.log(`SBOD Header: '${header}' -> Normalized Key: '${key}' at index ${index}`);
       columnIndexes[key] = index;
     });
     
     console.log('SBOD Column indexes:', columnIndexes);
+    
+    // Double check that we have the position preferences column
+    if (columnIndexes.preferredPositions === undefined) {
+      console.warn('WARNING: No preferred positions column found in SBOD sheet. Available columns:', 
+        headers.map(h => `'${h}'`).join(', '));
+    } else {
+      console.log('Found SBOD preferred positions column at index:', columnIndexes.preferredPositions);
+    }
     
     // Map the rows to objects using the headers as keys
     const profiles = data.values.slice(1).map((row, index) => {
@@ -236,7 +337,8 @@ export const fetchSBODProfiles = async () => {
         careerAlignment: '',
         contribution: '',
         technicalSkills: '',
-        achievements: ''
+        achievements: '',
+        preferredPositions: []  // Array to store position preferences
       };
       
       // Explicitly map each expected field using column indexes
@@ -286,6 +388,88 @@ export const fetchSBODProfiles = async () => {
       
       if (columnIndexes.achievements !== undefined && row[columnIndexes.achievements] !== undefined && row[columnIndexes.achievements] !== '') {
         profile.achievements = row[columnIndexes.achievements];
+      }
+      
+      // Parse preferred positions
+      if (columnIndexes.preferredPositions !== undefined && row[columnIndexes.preferredPositions] !== undefined && row[columnIndexes.preferredPositions] !== '') {
+        // Log the raw positions text for debugging
+        const positionsText = row[columnIndexes.preferredPositions];
+        console.log(`Raw position data for ${profile.name}:`, positionsText);
+        console.log(`Raw position column index:`, columnIndexes.preferredPositions);
+        console.log(`Raw position column data:`, row[columnIndexes.preferredPositions]);
+        
+        // Parse the text into an array of position names (lowercase for consistency)
+        // Handle different possible formats - comma separated list or newline separated list
+        let positions = [];
+        
+        // Log the exact raw data to understand the format
+        console.log(`Position text for ${profile.name} (${typeof positionsText}): "${positionsText}"`);
+        
+        // Check for multiple positions format (comma, newline, or other separators)
+        if (positionsText.includes(',')) {
+          // Handle comma-separated format (most common)
+          // Example: "President, Vice-President"
+          positions = positionsText.split(',');
+          console.log(`Split by comma:`, positions);
+        } else if (positionsText.includes('\n')) {
+          // Handle newline-separated format
+          positions = positionsText.split('\n');
+          console.log(`Split by newline:`, positions);
+        } else if (positionsText.includes(';')) {
+          // Handle semicolon-separated format
+          positions = positionsText.split(';');
+          console.log(`Split by semicolon:`, positions);
+        } else {
+          // Single value
+          positions = [positionsText];
+          console.log(`Single position:`, positions);
+        }
+        
+        // Clean up and normalize position names
+        profile.preferredPositions = positions
+          .map(pos => {
+            const cleaned = pos.trim().toLowerCase();
+            console.log(`Processing position: "${cleaned}"`);
+            
+            // Map common position names to standard format
+            if (cleaned === 'president' || cleaned.includes('president')) {
+              if (cleaned.includes('vice') || cleaned.includes('vp') || cleaned === 'vice-president') {
+                return 'vp';
+              }
+              return 'president';
+            }
+            
+            // Other position matching
+            if (cleaned === 'vice-president' || cleaned === 'vice president' || 
+                cleaned.includes('vice president') || cleaned.includes('vp')) {
+              return 'vp';
+            }
+            if (cleaned.includes('treasurer')) return 'treasurer';
+            if (cleaned.includes('secretary')) return 'secretary';
+            
+            // SBOD specific positions
+            if (cleaned.includes('webmaster') || cleaned.includes('tech lead') || cleaned.includes('math')) return 'webmaster';
+            if (cleaned.includes('cultural') || cleaned.includes('social')) return 'cultural';
+            if (cleaned.includes('ui') || cleaned.includes('ux') || cleaned.includes('marketing')) return 'ui-ux-marketing';
+            if (cleaned.includes('engineering') || cleaned.includes('vanguard')) return 'engineering-vanguard';
+            if (cleaned.includes('natural science') || cleaned.includes('research')) return 'natural-sciences-research';
+            if (cleaned.includes('director')) return 'director';
+            if (cleaned.includes('manager')) return 'manager';
+            if (cleaned.includes('coordinator')) return 'coordinator';
+            
+            console.log(`Position not recognized, using as-is: "${cleaned}"`);
+            return cleaned;
+          })
+          .filter(pos => pos !== '');
+          
+        console.log(`Parsed positions for ${profile.name}:`, profile.preferredPositions);
+      } else {
+        console.log(`No position data for ${profile.name}:`, {
+          hasIndex: columnIndexes.preferredPositions !== undefined,
+          hasData: columnIndexes.preferredPositions !== undefined && 
+                  row[columnIndexes.preferredPositions] !== undefined && 
+                  row[columnIndexes.preferredPositions] !== ''
+        });
       }
       
       return profile;
@@ -342,6 +526,9 @@ const normalizeHeaderName = (header) => {
     'What can you provide to SASE? (100-200 Words)': 'contribution',
     'What are some technical skills you have?': 'technicalSkills',
     'List your skills/awards/certifications': 'achievements',
+    'Select the positions you would like to apply for:': 'preferredPositions',
+    'Column 13': 'column13', // Special cases
+    'Column 14': 'preferredPositions', // Possible alternate header for positions
     
     // SBOD form headers
     'What is your first and last name?': 'name',
@@ -355,8 +542,19 @@ const normalizeHeaderName = (header) => {
     'List your technical skills (if applicable)': 'technicalSkills',
     'Why do you want to join SASE? (100-200 words)': 'why',
     'What can you provide to SASE? (100-200 words)': 'contribution',
-    'How does SASE align with your career goals? (100-200 words': 'careerAlignment'
+    'How does SASE align with your career goals? (100-200 words': 'careerAlignment',
+    'Select the positions you would like to apply for:': 'preferredPositions'
   };
+  
+  // Special case for the positions column
+  if (header && (
+      header.toLowerCase().includes('position') || 
+      header.toLowerCase().includes('select the positions') ||
+      header === 'Column 14' // Based on the headers provided
+  )) {
+    console.log(`Found position preferences column: '${header}'`);
+    return 'preferredPositions';
+  }
   
   // Return mapped value if exists, otherwise convert to camelCase
   return headerMap[header] || 
