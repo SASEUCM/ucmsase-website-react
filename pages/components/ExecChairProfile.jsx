@@ -8,11 +8,45 @@ import {
   Divider,
   Link,
   Button,
+  Badge,
+  Alert,
   useTheme
 } from '@aws-amplify/ui-react';
+import { useAuth } from '../context/AuthContext';
+import { useVoting } from '../hooks/useVoting';
 
-const ExecChairProfile = ({ profile }) => {
+const ExecChairProfile = ({ profile, showVoting = false, position = "" }) => {
   const { tokens } = useTheme();
+  const { isAuthenticated } = useAuth();
+  const { voteStatus, positionVotes, castVote, checkVoteStatus } = useVoting();
+  
+  // Set a default for legacy voting
+  const candidateType = "execchair";
+  
+  useEffect(() => {
+    if (showVoting && isAuthenticated) {
+      // If a position is specified, check voting status for that position
+      if (position) {
+        checkVoteStatus(candidateType, position);
+      } else {
+        // Otherwise, check overall voting status (legacy behavior)
+        checkVoteStatus();
+      }
+    }
+  }, [showVoting, isAuthenticated, profile.id, position]);
+  
+  // Get the appropriate vote status - either from position-specific state or legacy state
+  const getCurrentVoteStatus = () => {
+    if (position && positionVotes[position]) {
+      return positionVotes[position];
+    }
+    return voteStatus;
+  };
+  
+  const handleVote = async () => {
+    console.log(`Voting for candidate ${profile.id}${position ? `, position ${position}` : ''}...`);
+    await castVote(profile.id, candidateType, position || "general");
+  };
   
   // Photo display component with delayed loading
   const PhotoDisplay = () => {
@@ -195,6 +229,17 @@ const ExecChairProfile = ({ profile }) => {
           <Text color={tokens.colors.neutral[80].value}>
             {hasContent(profile.major) ? profile.major : 'Unknown Major'}
           </Text>
+          
+          {/* Display all positions the candidate is running for */}
+          {profile.preferredPositions && profile.preferredPositions.length > 0 && (
+            <View marginTop={tokens.space.small.value}>
+              <Text fontWeight="bold" color="#1A54C4">
+                Running for: {profile.preferredPositions
+                  .map(pos => pos.charAt(0).toUpperCase() + pos.slice(1))
+                  .join(', ')}
+              </Text>
+            </View>
+          )}
         </View>
         
         <Divider marginVertical={tokens.space.medium.value} />
@@ -290,6 +335,69 @@ const ExecChairProfile = ({ profile }) => {
             >
               View Resume
             </Button>
+          </View>
+        )}
+        
+        {showVoting && (
+          <View marginTop={tokens.space.large.value}>
+            {/* Get current vote status based on whether we're using position-based or legacy voting */}
+            {(() => {
+              const currentVoteStatus = getCurrentVoteStatus();
+              return (
+                <>
+                  {currentVoteStatus.error && (
+                    <Alert variation="error" marginBottom={tokens.space.medium.value}>
+                      {currentVoteStatus.error}
+                    </Alert>
+                  )}
+                  
+                  {isAuthenticated ? (
+                    <View textAlign="center">
+                      {currentVoteStatus.hasVoted && currentVoteStatus.votedFor === profile.id ? (
+                        <View>
+                          <Badge variation="success" size="large">
+                            You voted for this candidate{position ? ` for ${position}` : ''} ✓
+                          </Badge>
+                        </View>
+                      ) : currentVoteStatus.hasVoted ? (
+                        <View>
+                          <Badge variation="info" size="large">
+                            You already voted for another candidate{position ? ` for ${position}` : ''}
+                          </Badge>
+                        </View>
+                      ) : (
+                        <Button
+                          onClick={handleVote}
+                          isLoading={currentVoteStatus.loading}
+                          loadingText="Voting..."
+                          backgroundColor="#22BC66"
+                          color="white"
+                          padding={`${tokens.space.small.value} ${tokens.space.large.value}`}
+                          borderRadius={tokens.radii.medium.value}
+                          _hover={{
+                            backgroundColor: "#1DAA5B",
+                          }}
+                        >
+                          Vote for {profile.name}{position ? ` as ${position}` : ''}
+                        </Button>
+                      )}
+                      
+                      {/* Add debug info for testing - this will help diagnose issues */}
+                      <Text fontSize={tokens.fontSizes.xxs.value} color={tokens.colors.neutral[60].value} marginTop={tokens.space.xs.value}>
+                        Vote status: {currentVoteStatus.hasVoted ? `Voted for: ${currentVoteStatus.votedFor}` : 'Not voted'}
+                        {position ? ` (Position: ${position})` : ''}
+                      </Text>
+                    </View>
+                  ) : (
+                    <View textAlign="center">
+                      <Text color={tokens.colors.neutral[60].value}>
+                        Sign in to vote
+                      </Text>
+                    </View>
+                  )}
+                </>
+              );
+            })()}
           </View>
         )}
       </View>
