@@ -1,4 +1,4 @@
-import { View, Image, Text, Button, Heading, Flex, Card } from '@aws-amplify/ui-react';
+import { View, Image, Text, Button, Heading, Flex, Card, Divider } from '@aws-amplify/ui-react';
 import { useRouter } from 'next/router';
 import { useAuth } from './context/AuthContext';
 import { useEffect } from 'react';
@@ -18,6 +18,7 @@ export default function ElectionsPage() {
   if (!isAuthenticated) return null;
   // URL for the Google Form
   const googleFormUrl = "https://docs.google.com/forms/d/e/1FAIpQLSfz5MkZv8MwopfWPoqds2wDPnuI16x0sgd0_7miefilUIWzQw/viewform?usp=header";
+  const sbodFormUrl = "https://docs.google.com/forms/d/e/1FAIpQLSf2m0BzPjyMUa3e2mxY2Zkvk-BVC58KBkmGYcUJeevEU8UFmQ/viewform?usp=sharing";
   
   // Position details - could be expanded
   const positions = [
@@ -25,31 +26,31 @@ export default function ElectionsPage() {
       title: "President",
       description: "Lead the SASE organization and oversee all operations.",
       requirementsMarkdown: "- Must have served on SASE board for at least 1 year\n- Excellent leadership qualities\n- Strong communication skills",
-      type: "SBOD"
+      type: "Executive Chair"
     },
     {
       title: "Vice President",
       description: "Support the President and manage internal affairs of the organization.",
       requirementsMarkdown: "- Previous SASE board experience preferred\n- Ability to manage multiple projects\n- Strong organizational skills",
-      type: "SBOD"
+      type: "Executive Chair"
     },
     {
       title: "Co-Treasurer",
       description: "Manage finances, budgeting, and reimbursements for the organization.",
       requirementsMarkdown: "- Experience with budgeting\n- Attention to detail\n- Basic accounting knowledge",
-      type: "SBOD"
+      type: "Executive Chair"
     },
     {
       title: "Secretary",
       description: "Keep records, take meeting minutes, and maintain documentation.",
       requirementsMarkdown: "- Strong organizational skills\n- Excellent written communication\n- Attention to detail",
-      type: "SBOD"
+      type: "Executive Chair"
     },
     {
       title: "UI/UX Chair",
       description: "Manage social media and develop marketing strategies.",
       requirementsMarkdown: "- Experience with social media platforms\n- Creative content creation skills\n- Graphic design knowledge preferred",
-      type: "Executive Chair"
+      type: "SBOD"
     },
     {
       title: "Events Chair",
@@ -157,17 +158,71 @@ export default function ElectionsPage() {
           </View>
         </Card>
 
+        {/* Divider after Timeline */}
+        <View 
+          margin="3rem 0"
+          style={{
+            position: 'relative',
+            height: '2px',
+            background: 'linear-gradient(90deg, rgba(26, 84, 196, 0) 0%, rgba(26, 84, 196, 0.4) 50%, rgba(26, 84, 196, 0) 100%)',
+            boxShadow: '0 2px 4px -1px rgba(26, 84, 196, 0.1)',
+          }}
+        />
+
         {/* Positions Section */}
         <Heading level={2} textAlign="center" marginTop="3rem" marginBottom="1rem">
           Available Positions
         </Heading>
 
+        {/* Executive Chair Positions */}
+        <View>
+          <Heading level={3} marginTop="2rem">
+            Executive Chair Positions
+          </Heading>
+          <Text marginBottom="1rem">
+            Executive Chairs lead specific aspects of the organization and work closely with SBOD to implement the organization&apos;s vision.
+          </Text>
+          <Flex direction={{ base: 'column', medium: 'row' }} wrap="wrap" gap="1rem">
+            {positions
+              .filter(position => position.type === "Executive Chair")
+              .map((position, index) => (
+                <Card 
+                  key={index} 
+                  variation="elevated"
+                  width={{ base: '100%', medium: 'calc(50% - 1rem)' }} 
+                  marginBottom="1rem"
+                >
+                  <Heading level={4}>{position.title}</Heading>
+                  <Text>{position.description}</Text>
+                  <Heading level={5} marginTop="1rem">Requirements:</Heading>
+                  <Text as="div" 
+                    dangerouslySetInnerHTML={{ 
+                      __html: position.requirementsMarkdown.replace(/\n/g, '<br />').replace(/- /g, '&bull; ') 
+                    }} 
+                  />
+                </Card>
+              ))
+            }
+          </Flex>
+        </View>
+
+        {/* Apply Now Button */}
+        <Flex justifyContent="center" margin="2rem 0">
+          <Button
+            variation="primary"
+            size="large"
+            onClick={() => window.open(googleFormUrl, '_blank')}
+          >
+            Apply Now
+          </Button>
+        </Flex>
+
         {/* SBOD Positions */}
         <Heading level={3} marginTop="2rem">
-          Executive Chair Positions
+          Student Board of Directors (SBOD)
         </Heading>
         <Text marginBottom="1rem">
-          Executive Chairs lead specific aspects of the organization and work closely with SBOD to implement the organization&apos;s vision.
+          SBOD members form the core leadership team of SASE and are responsible for the overall direction and management of the organization.
         </Text>
         <Flex direction={{ base: 'column', medium: 'row' }} wrap="wrap" gap="1rem">
           {positions
@@ -192,35 +247,27 @@ export default function ElectionsPage() {
           }
         </Flex>
 
-        {/* Executive Chair Positions */}
-        <Heading level={3} marginTop="2rem">
-          Student Board of Directors (SBOD)
-        </Heading>
-        <Text marginBottom="1rem">
-        SBOD members form the core leadership team of SASE and are responsible for the overall direction and management of the organization.
-        </Text>
-        <Flex direction={{ base: 'column', medium: 'row' }} wrap="wrap" gap="1rem">
-          {positions
-            .filter(position => position.type === "Executive Chair")
-            .map((position, index) => (
-              <Card 
-                key={index} 
-                variation="elevated"
-                width={{ base: '100%', medium: 'calc(50% - 1rem)' }} 
-                marginBottom="1rem"
-              >
-                <Heading level={4}>{position.title}</Heading>
-                <Text>{position.description}</Text>
-                <Heading level={5} marginTop="1rem">Requirements:</Heading>
-                <Text as="div" 
-                  dangerouslySetInnerHTML={{ 
-                    __html: position.requirementsMarkdown.replace(/\n/g, '<br />').replace(/- /g, '&bull; ') 
-                  }} 
-                />
-              </Card>
-            ))
-          }
+        {/* Apply Now Button for SBOD */}
+        <Flex justifyContent="center" margin="2rem 0">
+          <Button
+            variation="primary"
+            size="large"
+            onClick={() => window.open(sbodFormUrl, '_blank')}
+          >
+            Apply Now
+          </Button>
         </Flex>
+
+        {/* Divider before FAQ */}
+        <View 
+          margin="3rem 0"
+          style={{
+            position: 'relative',
+            height: '2px',
+            background: 'linear-gradient(90deg, rgba(26, 84, 196, 0) 0%, rgba(26, 84, 196, 0.4) 50%, rgba(26, 84, 196, 0) 100%)',
+            boxShadow: '0 2px 4px -1px rgba(26, 84, 196, 0.1)',
+          }}
+        />
 
         {/* FAQ Section */}
         <Heading level={2} textAlign="center" marginTop="3rem" marginBottom="1rem">
@@ -241,17 +288,6 @@ export default function ElectionsPage() {
             <Text>Candidates will present to the SASE general body, followed by a vote among active members.</Text>
           </View>
         </Card>
-
-        {/* Apply Button - Again at Bottom */}
-        <Flex justifyContent="center" margin="2rem 0">
-          <Button
-            variation="primary"
-            size="large"
-            onClick={() => window.open(googleFormUrl, '_blank')}
-          >
-            Apply Now
-          </Button>
-        </Flex>
       </View>
 
       {/* Background image with blur */}
