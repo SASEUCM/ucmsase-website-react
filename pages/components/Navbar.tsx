@@ -441,7 +441,7 @@ const Navbar = () => {
         Elections
       </AmplifyLink>
     </Link>
-    <Link href="/ExecChairsAppPage" passHref legacyBehavior>
+    {/* <Link href="/ExecChairsAppPage" passHref legacyBehavior>
       <AmplifyLink
         className="nav-link"
         ref={(el) => {
@@ -453,7 +453,7 @@ const Navbar = () => {
       >
         Exec Chairs
       </AmplifyLink>
-    </Link>
+    </Link> */}
   </>
 )}
 

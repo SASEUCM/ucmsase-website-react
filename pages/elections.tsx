@@ -34,7 +34,7 @@ export default function ElectionsPage() {
       type: "SBOD"
     },
     {
-      title: "Treasurer",
+      title: "Co-Treasurer",
       description: "Manage finances, budgeting, and reimbursements for the organization.",
       requirementsMarkdown: "- Experience with budgeting\n- Attention to detail\n- Basic accounting knowledge",
       type: "SBOD"
@@ -46,7 +46,7 @@ export default function ElectionsPage() {
       type: "SBOD"
     },
     {
-      title: "Marketing Chair",
+      title: "UI/UX Chair",
       description: "Manage social media and develop marketing strategies.",
       requirementsMarkdown: "- Experience with social media platforms\n- Creative content creation skills\n- Graphic design knowledge preferred",
       type: "Executive Chair"
@@ -56,7 +56,25 @@ export default function ElectionsPage() {
       description: "Plan and coordinate organization events and activities.",
       requirementsMarkdown: "- Event planning experience\n- Strong time management\n- Good communication skills",
       type: "Executive Chair"
+    },
+    {
+      title: "Cultural Lead",
+      description: "Plan cultural events and activities.",
+      requirementsMarkdown: "- Event planning experience\n- Good Time Management skills\n- Good communication skills",
+      type: "Executive Chair"
+    },
+    {
+      title: "Engineering Lead",
+      description: "Host engineering-related workshops and events.",
+      requirementsMarkdown: "- Be able to attend Vanguard Meetings\n- Good technical skills\n- Strong communication skills",
+      type: "Executive Chair"
     }
+    // {
+    //   title: "Natural Sciences Lead",
+    //   description: "Host engineering-related workshops and events",
+    //   requirementsMarkdown: "- Event planning experience\n- Strong time management\n- Good communication skills",
+    //   type: "Executive Chair"
+    // }
   ];
 
   return (
