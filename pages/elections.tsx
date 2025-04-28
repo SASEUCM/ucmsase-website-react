@@ -25,19 +25,25 @@ export default function ElectionsPage() {
     {
       title: "President",
       description: "Lead the SASE organization and oversee all operations.",
-      requirementsMarkdown: "- Must have served on SASE board for at least 1 year\n- Excellent leadership qualities\n- Strong communication skills",
+      requirementsMarkdown: "- Excellent leadership qualities\n- Strong communication skills\n- Passion for promoting AAPI community",
       type: "Executive Chair"
     },
     {
-      title: "Vice President",
-      description: "Support the President and manage internal affairs of the organization.",
-      requirementsMarkdown: "- Previous SASE board experience preferred\n- Ability to manage multiple projects\n- Strong organizational skills",
+      title: "Internal Vice President",
+      description: "Manage internal affairs, member relations, and organization operations.",
+      requirementsMarkdown: "- Strong organizational skills\n- Excellent communication with team members",
       type: "Executive Chair"
     },
     {
-      title: "Co-Treasurer",
+      title: "External Vice President",
+      description: "Build relationships with external partners, sponsors, and other student organizations.",
+      requirementsMarkdown: "- Professional communication skills\n- Ability to represent SASE to outside entities",
+      type: "Executive Chair"
+    },
+    {
+      title: "Treasurer",
       description: "Manage finances, budgeting, and reimbursements for the organization.",
-      requirementsMarkdown: "- Experience with budgeting\n- Attention to detail\n- Basic accounting knowledge",
+      requirementsMarkdown: "- Attention to detail\n- Basic accounting knowledge",
       type: "Executive Chair"
     },
     {
@@ -47,28 +53,10 @@ export default function ElectionsPage() {
       type: "Executive Chair"
     },
     {
-      title: "UI/UX Chair",
+      title: "UI/UX & Marketing Lead",
       description: "Manage social media and develop marketing strategies.",
-      requirementsMarkdown: "- Experience with social media platforms\n- Creative content creation skills\n- Graphic design knowledge preferred",
+      requirementsMarkdown: "- Creative content creation skills\n- Interest in graphic design",
       type: "SBOD"
-    },
-    {
-      title: "Events Chair",
-      description: "Plan and coordinate organization events and activities.",
-      requirementsMarkdown: "- Event planning experience\n- Strong time management\n- Good communication skills",
-      type: "Executive Chair"
-    },
-    {
-      title: "Cultural Lead",
-      description: "Plan cultural events and activities.",
-      requirementsMarkdown: "- Event planning experience\n- Good Time Management skills\n- Good communication skills",
-      type: "Executive Chair"
-    },
-    {
-      title: "Engineering Lead",
-      description: "Host engineering-related workshops and events.",
-      requirementsMarkdown: "- Be able to attend Vanguard Meetings\n- Good technical skills\n- Strong communication skills",
-      type: "Executive Chair"
     }
     // {
     //   title: "Natural Sciences Lead",
@@ -93,7 +81,7 @@ export default function ElectionsPage() {
         boxShadow="medium"
         border="1px solid #e0e0e0"
       >
-        <Heading level={1} textAlign="center" marginBottom="1rem">
+        <Heading level={1} textAlign="center" marginBottom="1rem" fontWeight="bold">
           SASE Elections
         </Heading>
         
@@ -110,10 +98,10 @@ export default function ElectionsPage() {
           <View maxWidth="1000px" margin="0 auto">
             <Flex direction="row" alignItems="center" justifyContent="space-between">
               {[
-                { date: 'April 15th, 2025', event: 'Applications Open', icon: '📝' },
-                { date: 'April 29th, 2025', event: 'Applications Close', icon: '🔒' },
-                { date: 'May 3rd, 2025', event: 'Presentations', icon: '🎤' },
-                { date: 'May 10th, 2025', event: 'Results', icon: '🎉' },
+                { date: 'April 27th, 2025', event: 'Applications Open', icon: '🚀' },
+                { date: 'May 4th, 2025', event: 'Applications Close', icon: '📌' },
+                { date: 'May 5th - 11th, 2025', event: 'Interviews', icon: '👥' },
+                { date: 'May 12th, 2025', event: 'Results', icon: '🎉' },
               ].map((item, index, array) => (
                 <View key={index} width="200px" position="relative">
                   <Flex direction="column" alignItems="center">
@@ -170,7 +158,7 @@ export default function ElectionsPage() {
         />
 
         {/* Positions Section */}
-        <Heading level={2} textAlign="center" marginTop="3rem" marginBottom="1rem">
+        <Heading level={2} textAlign="center" marginTop="3rem" marginBottom="1rem" fontWeight="bold">
           Available Positions
         </Heading>
 
@@ -194,6 +182,21 @@ export default function ElectionsPage() {
                 >
                   <Heading level={4}>{position.title}</Heading>
                   <Text>{position.description}</Text>
+                  
+                  {position.title === "Treasurer" && (
+                    <View 
+                      backgroundColor="#fffde7" 
+                      padding="0.75rem" 
+                      borderRadius="4px" 
+                      marginTop="0.75rem"
+                      border="1px solid #fff9c4"
+                    >
+                      <Text as="div" fontWeight="bold">
+                        Note: The Treasurer will serve as co-treasurer for the first semester, working alongside the current Treasurer, and then take over as full Treasurer for the second semester and beyond.
+                      </Text>
+                    </View>
+                  )}
+                  
                   <Heading level={5} marginTop="1rem">Requirements:</Heading>
                   <Text as="div" 
                     dangerouslySetInnerHTML={{ 
@@ -204,18 +207,18 @@ export default function ElectionsPage() {
               ))
             }
           </Flex>
+          
+          {/* Apply Now Button for Executive Chair positions */}
+          <Flex justifyContent="center" margin="2rem 0">
+            <Button
+              variation="primary"
+              size="large"
+              onClick={() => window.open(googleFormUrl, '_blank')}
+            >
+              Apply for Executive Chair
+            </Button>
+          </Flex>
         </View>
-
-        {/* Apply Now Button */}
-        <Flex justifyContent="center" margin="2rem 0">
-          <Button
-            variation="primary"
-            size="large"
-            onClick={() => window.open(googleFormUrl, '_blank')}
-          >
-            Apply Now
-          </Button>
-        </Flex>
 
         {/* SBOD Positions */}
         <Heading level={3} marginTop="2rem">
@@ -245,49 +248,38 @@ export default function ElectionsPage() {
               </Card>
             ))
           }
+          
+          {/* Manually added SBOD positions */}
+          <Card variation="elevated" width={{ base: '100%', medium: 'calc(50% - 1rem)' }} marginBottom="1rem">
+            <Heading level={4}>Events & Cultural Lead</Heading>
+            <Text>Plan and coordinate organization events, including cultural activities and celebrations.</Text>
+            <Heading level={5} marginTop="1rem">Requirements:</Heading>
+            <Text as="div" dangerouslySetInnerHTML={{ 
+              __html: "• Strong time management<br />• Good communication skills<br />• Interest in cultural programming" 
+            }} />
+          </Card>
+          
+          <Card variation="elevated" width={{ base: '100%', medium: 'calc(50% - 1rem)' }} marginBottom="1rem">
+            <Heading level={4}>Engineering Lead</Heading>
+            <Text>Host engineering-related workshops and events.</Text>
+            <Heading level={5} marginTop="1rem">Requirements:</Heading>
+            <Text as="div" dangerouslySetInnerHTML={{ 
+              __html: "• Be able to attend Vanguard Meetings<br />• Strong communication skills" 
+            }} />
+          </Card>
         </Flex>
 
-        {/* Apply Now Button for SBOD */}
+        {/* Apply Now Button */}
         <Flex justifyContent="center" margin="2rem 0">
           <Button
             variation="primary"
             size="large"
             onClick={() => window.open(sbodFormUrl, '_blank')}
           >
-            Apply Now
+            Apply for SBOD
           </Button>
         </Flex>
 
-        {/* Divider before FAQ */}
-        <View 
-          margin="3rem 0"
-          style={{
-            position: 'relative',
-            height: '2px',
-            background: 'linear-gradient(90deg, rgba(26, 84, 196, 0) 0%, rgba(26, 84, 196, 0.4) 50%, rgba(26, 84, 196, 0) 100%)',
-            boxShadow: '0 2px 4px -1px rgba(26, 84, 196, 0.1)',
-          }}
-        />
-
-        {/* FAQ Section */}
-        <Heading level={2} textAlign="center" marginTop="3rem" marginBottom="1rem">
-          Frequently Asked Questions
-        </Heading>
-        <Card variation="elevated">
-          <View>
-            <Heading level={4}>How do I apply?</Heading>
-            <Text marginBottom="1rem">Click the &quot;Apply Now&quot; button to fill out our application form.</Text>
-            
-            <Heading level={4}>What is the time commitment?</Heading>
-            <Text marginBottom="1rem">Executive Chair positions typically require 5-7 hours per week, while SBOD positions require 3-5 hours per week.</Text>
-            
-            <Heading level={4}>Who can apply?</Heading>
-            <Text marginBottom="1rem">Any active SASE member enrolled at UCM can apply. Some positions have specific requirements as noted above.</Text>
-            
-            <Heading level={4}>How are elections conducted?</Heading>
-            <Text>Candidates will present to the SASE general body, followed by a vote among active members.</Text>
-          </View>
-        </Card>
       </View>
 
       {/* Background image with blur */}

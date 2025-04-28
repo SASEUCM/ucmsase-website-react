@@ -119,6 +119,7 @@ const SBODPage = () => {
                   <option value="ui-ux-marketing">UI/UX/Marketing Lead</option>
                   <option value="engineering-vanguard">Engineering Lead (Vanguard Representative)</option>
                   <option value="natural-sciences-research">Natural Sciences Lead (Research Development Lead)</option>
+                  <option value="events">Events Chair</option>
                 </SelectField>
               </View>
             )}
